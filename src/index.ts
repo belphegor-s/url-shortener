@@ -59,7 +59,7 @@ const spec: SwaggerUIOptions['spec'] = {
 				},
 				responses: {
 					200: {
-						description: 'Short URL created successfully',
+						description: 'Short URL created successfully or already exists',
 						content: {
 							'application/json': {
 								schema: {
@@ -67,12 +67,12 @@ const spec: SwaggerUIOptions['spec'] = {
 									properties: {
 										short_url: {
 											type: 'string',
-											description: 'The generated shortened URL.',
+											description: 'The generated (or existing) shortened URL.',
 											example: 'https://short.url/my-short-url',
 										},
 										existing: {
 											type: 'boolean',
-											description: 'Indicates if the URL already existed in the database.',
+											description: 'True if the short URL already existed for the original URL.',
 											example: false,
 										},
 									},
@@ -80,11 +80,14 @@ const spec: SwaggerUIOptions['spec'] = {
 							},
 						},
 					},
-					409: {
-						description: 'Conflict or error occurred (e.g., custom ID already exists)',
-					},
 					400: {
 						description: 'Bad request due to invalid or missing URL',
+					},
+					409: {
+						description: 'Conflict — Custom ID already exists or insert error',
+					},
+					500: {
+						description: 'Internal server error',
 					},
 				},
 			},
@@ -239,9 +242,11 @@ app.post('/create', async (c) => {
 
 	if (!url || !isValidUrl(url)) return c.text('Missing url', 400);
 
-	if (!custom_id) {
+	if (custom_id) {
+		const exists = await DB.prepare(`SELECT id FROM urls WHERE id = ?`).bind(custom_id).first();
+		if (exists) return c.text('Custom ID already in use', 409);
+	} else {
 		const existing = await DB.prepare(`SELECT id FROM urls WHERE original_url = ?`).bind(url).first();
-
 		if (existing) {
 			const short_url = `${new URL(c.req.url).origin}/${existing.id}`;
 			return c.json({ short_url, existing: true });
@@ -254,9 +259,10 @@ app.post('/create', async (c) => {
 		await DB.prepare(`INSERT INTO urls (id, original_url) VALUES (?, ?)`).bind(id, url).run();
 
 		const short_url = `${new URL(c.req.url).origin}/${id}`;
-		return c.json({ short_url });
-	} catch {
-		return c.text('Conflict or error', 409);
+		return c.json({ short_url, existing: false });
+	} catch (err) {
+		console.error('Insert failed:', err);
+		return c.text('Internal Server Error', 500);
 	}
 });
 
