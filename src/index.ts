@@ -1,5 +1,7 @@
 import { Hono } from 'hono';
 import { customAlphabet } from 'nanoid';
+import { swaggerUI } from '@hono/swagger-ui';
+import type { SwaggerUIOptions } from '@hono/swagger-ui';
 
 const app = new Hono();
 
@@ -19,10 +21,93 @@ const isValidUrl = (url: string) => {
 	}
 };
 
-const isBot = (userAgent: string): boolean => {
-	const botPattern = /bot|crawl|spider|robot/i;
-	return botPattern.test(userAgent);
+const spec: SwaggerUIOptions['spec'] = {
+	openapi: '3.1.0',
+	info: {
+		title: 'URL Shortener API',
+		version: '1.0.0',
+	},
+	paths: {
+		'/create': {
+			post: {
+				summary: 'Create a short URL',
+				requestBody: {
+					required: true,
+					content: {
+						'application/json': {
+							schema: {
+								type: 'object',
+								properties: {
+									url: { type: 'string' },
+									custom_id: { type: 'string' },
+								},
+								required: ['url'],
+							},
+						},
+					},
+				},
+				responses: {
+					200: {
+						description: 'Short URL created',
+					},
+					409: {
+						description: 'Conflict or error',
+					},
+				},
+			},
+		},
+		'/analytics': {
+			get: {
+				summary: 'Get analytics summary',
+				parameters: [
+					{
+						name: 'x-api-key',
+						in: 'header',
+						required: true,
+						schema: { type: 'string' },
+					},
+				],
+				responses: {
+					200: {
+						description: 'Analytics summary',
+					},
+					401: {
+						description: 'Unauthorized',
+					},
+				},
+			},
+		},
+		'/analytics/{id}': {
+			get: {
+				summary: 'Get full analytics for a short URL',
+				parameters: [
+					{
+						name: 'x-api-key',
+						in: 'header',
+						required: true,
+						schema: { type: 'string' },
+					},
+					{
+						name: 'id',
+						in: 'path',
+						required: true,
+						schema: { type: 'string' },
+					},
+				],
+				responses: {
+					200: {
+						description: 'Full analytics data',
+					},
+					401: {
+						description: 'Unauthorized',
+					},
+				},
+			},
+		},
+	},
 };
+
+app.get('/docs', swaggerUI({ spec, urls: [] }));
 
 app.post('/create', async (c) => {
 	const { DB } = c.env as Bindings;
