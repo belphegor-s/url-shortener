@@ -33,6 +33,7 @@ const spec: SwaggerUIOptions['spec'] = {
 				summary: 'Create a short URL',
 				description:
 					'Generate a shortened URL based on the original URL provided. Optionally, you can specify a custom ID for the shortened URL.',
+				tags: ['URL Shortener'],
 				requestBody: {
 					required: true,
 					content: {
@@ -88,6 +89,7 @@ const spec: SwaggerUIOptions['spec'] = {
 				summary: 'Get analytics summary',
 				description:
 					'Fetch analytics data, including click counts, first/last clicked timestamps, referrers, and country codes. You can paginate through the results using `page` and `limit` query parameters.',
+				tags: ['Analytics'],
 				parameters: [
 					{
 						name: 'x-api-key',
@@ -159,6 +161,7 @@ const spec: SwaggerUIOptions['spec'] = {
 				summary: 'Get full analytics for a short URL',
 				description:
 					'Retrieve detailed analytics for a specific shortened URL, including click data, referrers, user agents, and country codes.',
+				tags: ['Analytics'],
 				parameters: [
 					{
 						name: 'x-api-key',
@@ -210,6 +213,16 @@ const spec: SwaggerUIOptions['spec'] = {
 			},
 		},
 	},
+	tags: [
+		{
+			name: 'URL Shortener',
+			description: 'Endpoints for creating short URLs and handling related requests.',
+		},
+		{
+			name: 'Analytics',
+			description: 'Endpoints for fetching analytics related to the shortened URLs.',
+		},
+	],
 };
 
 app.get('/docs', swaggerUI({ spec, urls: [] }));
