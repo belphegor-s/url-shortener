@@ -31,6 +31,8 @@ const spec: SwaggerUIOptions['spec'] = {
 		'/create': {
 			post: {
 				summary: 'Create a short URL',
+				description:
+					'Generate a shortened URL based on the original URL provided. Optionally, you can specify a custom ID for the shortened URL.',
 				requestBody: {
 					required: true,
 					content: {
@@ -38,8 +40,16 @@ const spec: SwaggerUIOptions['spec'] = {
 							schema: {
 								type: 'object',
 								properties: {
-									url: { type: 'string' },
-									custom_id: { type: 'string' },
+									url: {
+										type: 'string',
+										description: 'The original URL that needs to be shortened.',
+										example: 'https://www.example.com',
+									},
+									custom_id: {
+										type: 'string',
+										description: 'Optional custom ID for the shortened URL.',
+										example: 'my-short-url',
+									},
 								},
 								required: ['url'],
 							},
@@ -48,10 +58,32 @@ const spec: SwaggerUIOptions['spec'] = {
 				},
 				responses: {
 					200: {
-						description: 'Short URL created',
+						description: 'Short URL created successfully',
+						content: {
+							'application/json': {
+								schema: {
+									type: 'object',
+									properties: {
+										short_url: {
+											type: 'string',
+											description: 'The generated shortened URL.',
+											example: 'https://short.url/my-short-url',
+										},
+										existing: {
+											type: 'boolean',
+											description: 'Indicates if the URL already existed in the database.',
+											example: false,
+										},
+									},
+								},
+							},
+						},
 					},
 					409: {
-						description: 'Conflict or error',
+						description: 'Conflict or error occurred (e.g., custom ID already exists)',
+					},
+					400: {
+						description: 'Bad request due to invalid or missing URL',
 					},
 				},
 			},
@@ -59,20 +91,70 @@ const spec: SwaggerUIOptions['spec'] = {
 		'/analytics': {
 			get: {
 				summary: 'Get analytics summary',
+				description:
+					'Fetch analytics data, including click counts, first/last clicked timestamps, referrers, and country codes. You can paginate through the results using `page` and `limit` query parameters.',
 				parameters: [
 					{
 						name: 'x-api-key',
 						in: 'header',
 						required: true,
 						schema: { type: 'string' },
+						description: 'API key required for authentication.',
+					},
+					{
+						name: 'page',
+						in: 'query',
+						required: false,
+						schema: { type: 'integer', default: 1 },
+						description: 'Page number for pagination (defaults to 1).',
+					},
+					{
+						name: 'limit',
+						in: 'query',
+						required: false,
+						schema: { type: 'integer', default: 50, minimum: 1, maximum: 500 },
+						description: 'Number of records per page (default is 50, max 500).',
+					},
+					{
+						name: 'sort',
+						in: 'query',
+						required: false,
+						schema: { type: 'string', default: 'desc', enum: ['asc', 'desc'] },
+						description: 'Sort order for results (defaults to `desc`).',
 					},
 				],
 				responses: {
 					200: {
 						description: 'Analytics summary',
+						content: {
+							'application/json': {
+								schema: {
+									type: 'object',
+									properties: {
+										page: { type: 'integer' },
+										limit: { type: 'integer' },
+										sort: { type: 'string' },
+										data: {
+											type: 'array',
+											items: {
+												type: 'object',
+												properties: {
+													short_id: { type: 'string' },
+													click_count: { type: 'integer' },
+													last_clicked: { type: 'string', format: 'date-time' },
+													first_clicked: { type: 'string', format: 'date-time' },
+													latest_referrer: { type: 'string' },
+													country_code: { type: 'string' },
+												},
+											},
+										},
+									},
+								},
+							},
+						},
 					},
 					401: {
-						description: 'Unauthorized',
+						description: 'Unauthorized - Invalid API key',
 					},
 				},
 			},
@@ -80,26 +162,54 @@ const spec: SwaggerUIOptions['spec'] = {
 		'/analytics/{id}': {
 			get: {
 				summary: 'Get full analytics for a short URL',
+				description:
+					'Retrieve detailed analytics for a specific shortened URL, including click data, referrers, user agents, and country codes.',
 				parameters: [
 					{
 						name: 'x-api-key',
 						in: 'header',
 						required: true,
 						schema: { type: 'string' },
+						description: 'API key required for authentication.',
 					},
 					{
 						name: 'id',
 						in: 'path',
 						required: true,
 						schema: { type: 'string' },
+						description: 'The unique ID of the shortened URL whose analytics are being requested.',
 					},
 				],
 				responses: {
 					200: {
-						description: 'Full analytics data',
+						description: 'Full analytics data for the requested short URL',
+						content: {
+							'application/json': {
+								schema: {
+									type: 'object',
+									properties: {
+										id: { type: 'string' },
+										click_count: { type: 'integer' },
+										analytics: {
+											type: 'array',
+											items: {
+												type: 'object',
+												properties: {
+													timestamp: { type: 'string', format: 'date-time' },
+													ip: { type: 'string' },
+													user_agent: { type: 'string' },
+													referrer: { type: 'string' },
+													country_code: { type: 'string' },
+												},
+											},
+										},
+									},
+								},
+							},
+						},
 					},
 					401: {
-						description: 'Unauthorized',
+						description: 'Unauthorized - Invalid API key',
 					},
 				},
 			},
@@ -142,8 +252,8 @@ app.get('/analytics', async (c) => {
 	const key = c.req.header('x-api-key');
 	if (key !== API_KEY) return c.text('Unauthorized', 401);
 
-	const page = parseInt(c.req.query('page') || '1');
-	const limit = parseInt(c.req.query('limit') || '50');
+	const page = Math.max(1, parseInt(c.req.query('page') || '1'));
+	const limit = Math.max(1, Math.min(parseInt(c.req.query('limit') || '50'), 500));
 	const sort = (c.req.query('sort') || 'desc').toLowerCase() === 'asc' ? 'ASC' : 'DESC';
 
 	const offset = (page - 1) * limit;
