@@ -79,7 +79,8 @@ This will deploy the application to Cloudflare Workers, and your API will be acc
 
   ```json
   {
-  	"short_url": "https://<your-worker-url>/<short_id>"
+  	"short_url": "https://<your-worker-url>/<short_id>",
+  	"existing": "<boolean>" // Indicates if the URL already existed in the database
   }
   ```
 
