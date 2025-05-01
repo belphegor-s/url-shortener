@@ -7,7 +7,7 @@ export const swaggerSpec = {
 	},
 	servers: [
 		{
-			url: 'https://url-shortner.ayush2162002.workers.dev',
+			url: 'https://pixly.sh',
 		},
 	],
 	paths: {

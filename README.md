@@ -97,7 +97,7 @@ This will deploy the application to Cloudflare Workers, and your API will be acc
 
 ### 6. Swagger UI Documentation
 
-Access the API documentation [Here](https://url-shortner.ayush2162002.workers.dev/docs) or locally at:
+Access the API documentation [Here](https://pixly.sh/docs) or locally at:
 
 ```
 /docs
