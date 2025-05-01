@@ -69,11 +69,6 @@ const spec: SwaggerUIOptions['spec'] = {
 											description: 'The generated shortened URL.',
 											example: 'https://short.url/my-short-url',
 										},
-										existing: {
-											type: 'boolean',
-											description: 'Indicates if the URL already existed in the database.',
-											example: false,
-										},
 									},
 								},
 							},
