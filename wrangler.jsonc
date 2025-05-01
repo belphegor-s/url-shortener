@@ -7,9 +7,17 @@
 	"name": "url-shortner",
 	"main": "src/index.ts",
 	"compatibility_date": "2025-04-30",
+	"compatibility_flags": ["nodejs_compat"],
 	"observability": {
 		"enabled": true
-	}
+	},
+	"d1_databases": [
+		{
+			"binding": "DB",
+			"database_name": "url_shortener_db",
+			"database_id": "e1135361-a01f-4886-83b5-b9a4f1f28be0"
+		}
+	]
 	/**
 	 * Smart Placement
 	 * Docs: https://developers.cloudflare.com/workers/configuration/smart-placement/#smart-placement
