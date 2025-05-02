@@ -233,7 +233,7 @@ const spec: SwaggerUIOptions['spec'] = {
 	],
 };
 
-app.get('/', swaggerUI({ spec, urls: [] }));
+app.get('/', swaggerUI({ spec, urls: [], title: 'URL Shortener API' }));
 
 app.post('/create', async (c) => {
 	const { DB } = c.env as Bindings;
