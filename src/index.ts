@@ -233,7 +233,7 @@ const spec: SwaggerUIOptions['spec'] = {
 	],
 };
 
-app.get('/docs', swaggerUI({ spec, urls: [] }));
+app.get('/', swaggerUI({ spec, urls: [] }));
 
 app.post('/create', async (c) => {
 	const { DB } = c.env as Bindings;
