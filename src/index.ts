@@ -177,6 +177,67 @@ const spec: SwaggerUIOptions['spec'] = {
 					},
 				},
 			},
+			delete: {
+				summary: 'Delete analytics and short URLs',
+				description: 'Delete all analytics records and associated short URLs for the given list of short IDs. Requires a valid API key.',
+				tags: ['URL Shortener'],
+				requestBody: {
+					required: true,
+					content: {
+						'application/json': {
+							schema: {
+								type: 'object',
+								required: ['ids'],
+								properties: {
+									ids: {
+										type: 'array',
+										items: { type: 'string' },
+										description: 'List of short_id values to delete analytics and URL entries for.',
+									},
+								},
+								example: {
+									ids: ['abc123', 'xyz789'],
+								},
+							},
+						},
+					},
+				},
+				parameters: [
+					{
+						name: 'x-api-key',
+						in: 'header',
+						required: true,
+						schema: { type: 'string' },
+						description: 'API key required for authentication.',
+					},
+				],
+				responses: {
+					200: {
+						description: 'Analytics and URL entries successfully deleted.',
+						content: {
+							'application/json': {
+								schema: {
+									type: 'object',
+									properties: {
+										success: { type: 'boolean', example: true },
+										ids: {
+											type: 'array',
+											items: { type: 'string' },
+											description: 'IDs that were deleted.',
+										},
+									},
+								},
+							},
+						},
+					},
+					400: {
+						description: 'Invalid request body — `ids` is missing or empty.',
+					},
+					401: {
+						description: 'Unauthorized — Invalid API key.',
+					},
+				},
+			},
 		},
 		'/analytics/{id}': {
 			get: {
@@ -324,6 +385,28 @@ app.get('/analytics', async (c) => {
 		total: totalResult?.total || 0,
 		data: result.results,
 	});
+});
+
+app.delete('/analytics', async (c) => {
+	const { DB, API_KEY } = c.env as Bindings;
+	const key = c.req.header('x-api-key');
+	if (key !== API_KEY) return c.text('Unauthorized', 401);
+
+	const body = await c.req.json();
+	const ids = body.ids as string[];
+
+	if (!Array.isArray(ids) || ids.length === 0) {
+		return c.text('Invalid request body', 400);
+	}
+
+	const placeholders = ids.map(() => '?').join(',');
+
+	await DB.batch([
+		DB.prepare(`DELETE FROM analytics WHERE short_id IN (${placeholders})`).bind(...ids),
+		DB.prepare(`DELETE FROM urls WHERE id IN (${placeholders})`).bind(...ids),
+	]);
+
+	return c.json({ success: true, ids });
 });
 
 app.get('/analytics/:id', async (c) => {

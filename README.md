@@ -66,6 +66,7 @@ This will deploy the application to Cloudflare Workers, and your API will be acc
 ### 5. API Endpoints
 
 - **GET `/create`**: Create a short URL from an original URL using query parameters.
+
   **Query Parameters**:
 
   ```bash
@@ -81,12 +82,23 @@ This will deploy the application to Cloudflare Workers, and your API will be acc
   }
   ```
 
-- **GET `/analytics`**: Fetch analytics for all short URLs.  
+- **GET `/analytics`**: Fetch analytics for all short URLs.
+
   **Query Parameters**:
 
   - `page` (optional): The page number for pagination.
   - `limit` (optional): The number of results per page (default: 50, max: 500).
   - `sort` (optional): Sort order (`asc` or `desc`, default: `desc`).
+
+- **DELETE `/analytics`**: Delete analytics and short URLs for the provided `ids` (`short_id[]`).
+
+  **JSON Body**:
+
+  ```json
+  {
+  	"ids": ["abc123", "xyz456"]
+  }
+  ```
 
 - **GET `/analytics/:id`**: Fetch analytics for a specific short URL ID.
 
