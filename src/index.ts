@@ -2,8 +2,18 @@ import { Hono } from 'hono';
 import { customAlphabet } from 'nanoid';
 import { swaggerUI } from '@hono/swagger-ui';
 import type { SwaggerUIOptions } from '@hono/swagger-ui';
+import { cors } from 'hono/cors';
 
 const app = new Hono();
+
+app.use(
+	'*',
+	cors({
+		origin: 'http://localhost:5173',
+		allowHeaders: ['Content-Type', 'x-api-key'],
+		allowMethods: ['GET', 'POST', 'OPTIONS'],
+	})
+);
 
 type Bindings = {
 	DB: D1Database;
@@ -138,6 +148,10 @@ const spec: SwaggerUIOptions['spec'] = {
 										page: { type: 'integer' },
 										limit: { type: 'integer' },
 										sort: { type: 'string' },
+										total: {
+											type: 'integer',
+											description: 'Total number of unique short links (short_id)',
+										},
 										data: {
 											type: 'array',
 											items: {
@@ -275,6 +289,12 @@ app.get('/analytics', async (c) => {
 
 	const offset = (page - 1) * limit;
 
+	const totalResult = await DB.prepare(
+		`
+		SELECT COUNT(DISTINCT short_id) AS total FROM analytics
+	`
+	).first<{ total: number }>();
+
 	const result = await DB.prepare(
 		`
 		SELECT
@@ -297,6 +317,7 @@ app.get('/analytics', async (c) => {
 		page,
 		limit,
 		sort,
+		total: totalResult?.total || 0,
 		data: result.results,
 	});
 });
