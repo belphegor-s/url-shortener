@@ -308,7 +308,7 @@ app.get('/analytics', async (c) => {
 		  MAX(CASE WHEN timestamp = (SELECT MAX(timestamp) FROM analytics AS a2 WHERE a2.short_id = a1.short_id) THEN referrer ELSE NULL END) AS latest_referrer,
 		  MAX(country_code) AS country_code
 		FROM analytics AS a1
-		JOIN urls AS u ON a1.short_id = u.short_id
+		JOIN urls AS u ON a1.short_id = u.id
 		GROUP BY a1.short_id, u.original_url
 		ORDER BY last_clicked ${sort}
 		LIMIT ? OFFSET ?
@@ -333,7 +333,7 @@ app.get('/analytics/:id', async (c) => {
 
 	const id = c.req.param('id');
 
-	const urlResult = await DB.prepare(`SELECT original_url FROM urls WHERE short_id = ?`).bind(id).first<{ original_url: string }>();
+	const urlResult = await DB.prepare(`SELECT original_url FROM urls WHERE id = ?`).bind(id).first<{ original_url: string }>();
 
 	const result = await DB.prepare(
 		`
