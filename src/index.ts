@@ -180,7 +180,7 @@ const spec: SwaggerUIOptions['spec'] = {
 			delete: {
 				summary: 'Delete analytics and short URLs',
 				description: 'Delete all analytics records and associated short URLs for the given list of short IDs. Requires a valid API key.',
-				tags: ['URL Shortener'],
+				tags: ['Analytics'],
 				requestBody: {
 					required: true,
 					content: {
