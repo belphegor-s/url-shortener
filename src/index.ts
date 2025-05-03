@@ -9,9 +9,9 @@ const app = new Hono();
 app.use(
 	'*',
 	cors({
-		origin: 'http://localhost:5173',
+		origin: 'http://localhost:3000',
 		allowHeaders: ['Content-Type', 'x-api-key'],
-		allowMethods: ['GET', 'POST', 'OPTIONS'],
+		allowMethods: ['GET', 'OPTIONS'],
 	})
 );
 
@@ -163,6 +163,7 @@ const spec: SwaggerUIOptions['spec'] = {
 													first_clicked: { type: 'string', format: 'date-time' },
 													latest_referrer: { type: 'string' },
 													country_code: { type: 'string' },
+													original_url: { type: 'string' },
 												},
 											},
 										},
@@ -219,6 +220,7 @@ const spec: SwaggerUIOptions['spec'] = {
 													user_agent: { type: 'string' },
 													referrer: { type: 'string' },
 													country_code: { type: 'string' },
+													original_url: { type: 'string' },
 												},
 											},
 										},
@@ -298,17 +300,19 @@ app.get('/analytics', async (c) => {
 	const result = await DB.prepare(
 		`
 		SELECT
-		  short_id,
+		  a1.short_id,
+		  u.original_url,
 		  COUNT(*) AS click_count,
 		  MAX(timestamp) AS last_clicked,
 		  MIN(timestamp) AS first_clicked,
 		  MAX(CASE WHEN timestamp = (SELECT MAX(timestamp) FROM analytics AS a2 WHERE a2.short_id = a1.short_id) THEN referrer ELSE NULL END) AS latest_referrer,
 		  MAX(country_code) AS country_code
 		FROM analytics AS a1
-		GROUP BY short_id
+		JOIN urls AS u ON a1.short_id = u.short_id
+		GROUP BY a1.short_id, u.original_url
 		ORDER BY last_clicked ${sort}
 		LIMIT ? OFFSET ?
-	  `
+		`
 	)
 		.bind(limit, offset)
 		.all();
@@ -319,6 +323,34 @@ app.get('/analytics', async (c) => {
 		sort,
 		total: totalResult?.total || 0,
 		data: result.results,
+	});
+});
+
+app.get('/analytics/:id', async (c) => {
+	const { DB, API_KEY } = c.env as Bindings;
+	const key = c.req.header('x-api-key');
+	if (key !== API_KEY) return c.text('Unauthorized', 401);
+
+	const id = c.req.param('id');
+
+	const urlResult = await DB.prepare(`SELECT original_url FROM urls WHERE short_id = ?`).bind(id).first<{ original_url: string }>();
+
+	const result = await DB.prepare(
+		`
+		SELECT timestamp, ip, user_agent, referrer, country_code
+		FROM analytics WHERE short_id = ?
+		ORDER BY timestamp DESC
+		LIMIT 1000
+		`
+	)
+		.bind(id)
+		.all();
+
+	return c.json({
+		id,
+		original_url: urlResult?.original_url || null,
+		click_count: result.results.length,
+		analytics: result.results,
 	});
 });
 
@@ -348,31 +380,6 @@ app.get('/:id', async (c) => {
 		.run();
 
 	return c.redirect(original_url, 302);
-});
-
-app.get('/analytics/:id', async (c) => {
-	const { DB, API_KEY } = c.env as Bindings;
-	const key = c.req.header('x-api-key');
-	if (key !== API_KEY) return c.text('Unauthorized', 401);
-
-	const id = c.req.param('id');
-
-	const result = await DB.prepare(
-		`
-		SELECT timestamp, ip, user_agent, referrer, country_code
-		FROM analytics WHERE short_id = ?
-		ORDER BY timestamp DESC
-		LIMIT 1000
-	  `
-	)
-		.bind(id)
-		.all();
-
-	return c.json({
-		id,
-		click_count: result.results.length,
-		analytics: result.results,
-	});
 });
 
 export default app;
