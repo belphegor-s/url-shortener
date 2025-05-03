@@ -65,14 +65,11 @@ This will deploy the application to Cloudflare Workers, and your API will be acc
 
 ### 5. API Endpoints
 
-- **POST `/create`**: Create a short URL from an original URL.  
-  **Request Body**:
+- **GET `/create`**: Create a short URL from an original URL using query parameters.
+  **Query Parameters**:
 
-  ```json
-  {
-  	"url": "https://example.com",
-  	"custom_id": "mycustomid" // Optional
-  }
+  ```bash
+  ?url=https://example.com&custom_id=mycustomid # `custom_id` is optional
   ```
 
   **Response**:
@@ -80,7 +77,7 @@ This will deploy the application to Cloudflare Workers, and your API will be acc
   ```json
   {
   	"short_url": "https://<your-worker-url>/<short_id>",
-  	"existing": "<boolean>" // Indicates if the URL already existed in the database
+  	"existing": true // Indicates if the URL already existed in the database
   }
   ```
 

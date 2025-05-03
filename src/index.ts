@@ -29,34 +29,33 @@ const spec: SwaggerUIOptions['spec'] = {
 	},
 	paths: {
 		'/create': {
-			post: {
+			get: {
 				summary: 'Create a short URL',
 				description:
-					'Generate a shortened URL based on the original URL provided. Optionally, you can specify a custom ID for the shortened URL.',
+					'Generate a shortened URL based on the original URL provided as a query parameter. Optionally, you can specify a custom ID for the shortened URL.',
 				tags: ['URL Shortener'],
-				requestBody: {
-					required: true,
-					content: {
-						'application/json': {
-							schema: {
-								type: 'object',
-								properties: {
-									url: {
-										type: 'string',
-										description: 'The original URL that needs to be shortened.',
-										example: 'https://www.example.com',
-									},
-									custom_id: {
-										type: 'string',
-										description: 'Optional custom ID for the shortened URL.',
-										example: 'my-short-url',
-									},
-								},
-								required: ['url'],
-							},
+				parameters: [
+					{
+						name: 'url',
+						in: 'query',
+						required: true,
+						schema: {
+							type: 'string',
 						},
+						description: 'The original URL that needs to be shortened.',
+						example: 'https://www.example.com',
 					},
-				},
+					{
+						name: 'custom_id',
+						in: 'query',
+						required: false,
+						schema: {
+							type: 'string',
+						},
+						description: 'Optional custom ID for the shortened URL.',
+						example: 'my-short-url',
+					},
+				],
 				responses: {
 					200: {
 						description: 'Short URL created successfully or already exists',
@@ -235,12 +234,11 @@ const spec: SwaggerUIOptions['spec'] = {
 
 app.get('/', swaggerUI({ spec, urls: [], title: 'URL Shortener API' }));
 
-app.post('/create', async (c) => {
+app.get('/create', async (c) => {
 	const { DB } = c.env as Bindings;
-	const body = await c.req.json();
-	const { url, custom_id } = body;
+	const { url, custom_id } = c.req.query();
 
-	if (!url || !isValidUrl(url)) return c.text('Missing url', 400);
+	if (!url || !isValidUrl(url)) return c.text('Missing or invalid url', 400);
 
 	if (custom_id) {
 		const exists = await DB.prepare(`SELECT id FROM urls WHERE id = ?`).bind(custom_id).first();
