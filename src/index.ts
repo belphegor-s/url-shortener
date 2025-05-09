@@ -12,6 +12,7 @@ app.use(
 		origin: 'http://localhost:3000',
 		allowHeaders: ['Content-Type', 'x-api-key'],
 		allowMethods: ['GET', 'OPTIONS'],
+		maxAge: 0,
 	})
 );
 
