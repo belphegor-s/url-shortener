@@ -8,6 +8,7 @@
 	"main": "src/index.ts",
 	"compatibility_date": "2025-04-30",
 	"compatibility_flags": ["nodejs_compat"],
+	"account_id": "dffa73327fbd08316787eb03c1afc673",
 	"observability": {
 		"enabled": true
 	},
