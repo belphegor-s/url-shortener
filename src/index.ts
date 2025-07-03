@@ -116,13 +116,6 @@ const spec: SwaggerUIOptions['spec'] = {
 				],
 				parameters: [
 					{
-						name: 'x-api-key',
-						in: 'header',
-						required: true,
-						schema: { type: 'string' },
-						description: 'API key required for authentication.',
-					},
-					{
 						name: 'page',
 						in: 'query',
 						required: false,
@@ -214,15 +207,6 @@ const spec: SwaggerUIOptions['spec'] = {
 						},
 					},
 				},
-				parameters: [
-					{
-						name: 'x-api-key',
-						in: 'header',
-						required: true,
-						schema: { type: 'string' },
-						description: 'API key required for authentication.',
-					},
-				],
 				responses: {
 					200: {
 						description: 'Analytics and URL entries successfully deleted.',
@@ -263,13 +247,6 @@ const spec: SwaggerUIOptions['spec'] = {
 					},
 				],
 				parameters: [
-					{
-						name: 'x-api-key',
-						in: 'header',
-						required: true,
-						schema: { type: 'string' },
-						description: 'API key required for authentication.',
-					},
 					{
 						name: 'id',
 						in: 'path',
