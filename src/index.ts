@@ -40,33 +40,34 @@ const spec: SwaggerUIOptions['spec'] = {
 	},
 	paths: {
 		'/create': {
-			get: {
+			post: {
 				summary: 'Create a short URL',
 				description:
 					'Generate a shortened URL based on the original URL provided as a query parameter. Optionally, you can specify a custom ID for the shortened URL.',
 				tags: ['URL Shortener'],
-				parameters: [
-					{
-						name: 'url',
-						in: 'query',
-						required: true,
-						schema: {
-							type: 'string',
+				requestBody: {
+					required: true,
+					content: {
+						'application/json': {
+							schema: {
+								type: 'object',
+								properties: {
+									url: {
+										type: 'string',
+										description: 'The original URL that needs to be shortened.',
+										example: 'https://www.example.com',
+									},
+									custom_id: {
+										type: 'string',
+										description: 'Optional custom ID for the shortened URL.',
+										example: 'my-short-url',
+									},
+								},
+								required: ['url'],
+							},
 						},
-						description: 'The original URL that needs to be shortened.',
-						example: 'https://www.example.com',
 					},
-					{
-						name: 'custom_id',
-						in: 'query',
-						required: false,
-						schema: {
-							type: 'string',
-						},
-						description: 'Optional custom ID for the shortened URL.',
-						example: 'my-short-url',
-					},
-				],
+				},
 				responses: {
 					200: {
 						description: 'Short URL created successfully or already exists',
@@ -78,7 +79,7 @@ const spec: SwaggerUIOptions['spec'] = {
 										short_url: {
 											type: 'string',
 											description: 'The generated (or existing) shortened URL.',
-											example: 'https://short.url/my-short-url',
+											example: 'https://mini-url.in/my-short-url',
 										},
 										existing: {
 											type: 'boolean',
@@ -94,7 +95,7 @@ const spec: SwaggerUIOptions['spec'] = {
 						description: 'Bad request due to invalid or missing URL',
 					},
 					409: {
-						description: 'Conflict — Custom ID already exists or insert error',
+						description: 'Conflict — Custom ID already in use',
 					},
 					500: {
 						description: 'Internal server error',
@@ -108,6 +109,11 @@ const spec: SwaggerUIOptions['spec'] = {
 				description:
 					'Fetch analytics data, including click counts, first/last clicked timestamps, referrers, and country codes. You can paginate through the results using `page` and `limit` query parameters.',
 				tags: ['Analytics'],
+				security: [
+					{
+						ApiKeyAuth: [],
+					},
+				],
 				parameters: [
 					{
 						name: 'x-api-key',
@@ -182,6 +188,11 @@ const spec: SwaggerUIOptions['spec'] = {
 				summary: 'Delete analytics and short URLs',
 				description: 'Delete all analytics records and associated short URLs for the given list of short IDs. Requires a valid API key.',
 				tags: ['Analytics'],
+				security: [
+					{
+						ApiKeyAuth: [],
+					},
+				],
 				requestBody: {
 					required: true,
 					content: {
@@ -246,6 +257,11 @@ const spec: SwaggerUIOptions['spec'] = {
 				description:
 					'Retrieve detailed analytics for a specific shortened URL, including click data, referrers, user agents, and country codes.',
 				tags: ['Analytics'],
+				security: [
+					{
+						ApiKeyAuth: [],
+					},
+				],
 				parameters: [
 					{
 						name: 'x-api-key',
@@ -298,6 +314,16 @@ const spec: SwaggerUIOptions['spec'] = {
 			},
 		},
 	},
+	components: {
+		securitySchemes: {
+			ApiKeyAuth: {
+				type: 'apiKey',
+				in: 'header',
+				name: 'x-api-key',
+			},
+		},
+	},
+
 	tags: [
 		{
 			name: 'URL Shortener',
@@ -312,9 +338,9 @@ const spec: SwaggerUIOptions['spec'] = {
 
 app.get('/', swaggerUI({ spec, urls: [], title: 'URL Shortener API' }));
 
-app.get('/create', async (c) => {
+app.post('/create', async (c) => {
 	const { DB } = c.env as Bindings;
-	const { url, custom_id } = c.req.query();
+	const { url, custom_id } = await c.req.json();
 
 	if (!url || !isValidUrl(url)) return c.text('Missing or invalid url', 400);
 
