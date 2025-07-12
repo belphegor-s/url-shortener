@@ -10,8 +10,8 @@ app.use(
 	'*',
 	cors({
 		origin: 'http://localhost:3000',
-		allowHeaders: ['Content-Type', 'x-api-key'],
-		allowMethods: ['GET', 'OPTIONS'],
+		allowHeaders: ['content-type', 'authorization'],
+		allowMethods: ['GET', 'POST', 'OPTIONS'],
 		maxAge: 0,
 	})
 );
@@ -111,7 +111,7 @@ const spec: SwaggerUIOptions['spec'] = {
 				tags: ['Analytics'],
 				security: [
 					{
-						ApiKeyAuth: [],
+						bearerAuth: [],
 					},
 				],
 				parameters: [
@@ -183,7 +183,7 @@ const spec: SwaggerUIOptions['spec'] = {
 				tags: ['Analytics'],
 				security: [
 					{
-						ApiKeyAuth: [],
+						bearerAuth: [],
 					},
 				],
 				requestBody: {
@@ -243,7 +243,7 @@ const spec: SwaggerUIOptions['spec'] = {
 				tags: ['Analytics'],
 				security: [
 					{
-						ApiKeyAuth: [],
+						bearerAuth: [],
 					},
 				],
 				parameters: [
@@ -293,10 +293,10 @@ const spec: SwaggerUIOptions['spec'] = {
 	},
 	components: {
 		securitySchemes: {
-			ApiKeyAuth: {
-				type: 'apiKey',
-				in: 'header',
-				name: 'x-api-key',
+			bearerAuth: {
+				type: 'http',
+				scheme: 'bearer',
+				bearerFormat: 'JWT',
 			},
 		},
 	},
@@ -347,7 +347,13 @@ app.post('/create', async (c) => {
 
 app.get('/analytics', async (c) => {
 	const { DB, API_KEY } = c.env as Bindings;
-	const key = c.req.header('x-api-key');
+	const authHeader = c.req.header('authorization');
+
+	if (!authHeader || !authHeader.startsWith('Bearer ')) {
+		return c.json({ error: 'Unauthorized: Missing or invalid token' }, 401);
+	}
+
+	const key = authHeader.split(' ')[1];
 	if (key !== API_KEY) return c.text('Unauthorized', 401);
 
 	const page = Math.max(1, parseInt(c.req.query('page') || '1'));
@@ -393,7 +399,13 @@ app.get('/analytics', async (c) => {
 
 app.delete('/analytics', async (c) => {
 	const { DB, API_KEY } = c.env as Bindings;
-	const key = c.req.header('x-api-key');
+	const authHeader = c.req.header('authorization');
+
+	if (!authHeader || !authHeader.startsWith('Bearer ')) {
+		return c.json({ error: 'Unauthorized: Missing or invalid token' }, 401);
+	}
+
+	const key = authHeader.split(' ')[1];
 	if (key !== API_KEY) return c.text('Unauthorized', 401);
 
 	const body = await c.req.json();
@@ -415,7 +427,13 @@ app.delete('/analytics', async (c) => {
 
 app.get('/analytics/:id', async (c) => {
 	const { DB, API_KEY } = c.env as Bindings;
-	const key = c.req.header('x-api-key');
+	const authHeader = c.req.header('authorization');
+
+	if (!authHeader || !authHeader.startsWith('Bearer ')) {
+		return c.json({ error: 'Unauthorized: Missing or invalid token' }, 401);
+	}
+
+	const key = authHeader.split(' ')[1];
 	if (key !== API_KEY) return c.text('Unauthorized', 401);
 
 	const id = c.req.param('id');
