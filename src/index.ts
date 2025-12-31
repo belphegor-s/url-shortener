@@ -79,7 +79,7 @@ const spec: SwaggerUIOptions['spec'] = {
 										short_url: {
 											type: 'string',
 											description: 'The generated (or existing) shortened URL.',
-											example: 'https://pixly.sh/my-short-url',
+											example: 'https://short.pixly.sh/my-short-url',
 										},
 										existing: {
 											type: 'boolean',
