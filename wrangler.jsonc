@@ -18,6 +18,12 @@
 			"database_name": "url_shortener_db",
 			"database_id": "e1135361-a01f-4886-83b5-b9a4f1f28be0"
 		}
+	],
+	"routes": [
+		{
+			"pattern": "short.pixly.sh",
+			"custom_domain": true
+		}
 	]
 	/**
 	 * Smart Placement
