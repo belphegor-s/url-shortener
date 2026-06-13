@@ -6,16 +6,23 @@
 		"deploy": "wrangler deploy",
 		"dev": "wrangler dev",
 		"start": "wrangler dev",
-		"cf-typegen": "wrangler types"
+		"cf-typegen": "wrangler types",
+		"typecheck": "tsc --noEmit",
+		"test": "vitest run",
+		"test:watch": "vitest",
+		"migrate:local": "wrangler d1 migrations apply url_shortener_db --local",
+		"migrate": "wrangler d1 migrations apply url_shortener_db --remote"
 	},
 	"devDependencies": {
-		"@cloudflare/workers-types": "^4.20250430.0",
-		"typescript": "^5.5.2",
-		"wrangler": "^4.13.2"
+		"@cloudflare/vitest-pool-workers": "0.8.71",
+		"@cloudflare/workers-types": "4.20260613.1",
+		"typescript": "5.8.3",
+		"vitest": "3.0.9",
+		"wrangler": "4.100.0"
 	},
 	"dependencies": {
-		"@hono/swagger-ui": "^0.5.1",
-		"hono": "^4.7.8",
-		"nanoid": "^5.1.5"
+		"@hono/swagger-ui": "0.5.1",
+		"hono": "4.7.8",
+		"nanoid": "5.1.5"
 	}
 }

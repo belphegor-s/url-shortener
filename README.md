@@ -1,119 +1,144 @@
 # URL Shortener API with Analytics
 
-This is a simple URL shortener API with analytics and custom URL support. It provides endpoints to create short URLs, track usage, and retrieve analytics data.
+A blazingly fast, production-grade URL shortener built on **Cloudflare Workers + D1 + KV**, using [Hono](https://hono.dev). Create short URLs, redirect at the edge, and track per-click analytics.
+
+## Architecture
+
+- **Edge cache (KV).** The redirect hot path (`GET /:id`) is read-through cached in Workers KV — warm short-codes resolve globally at the edge without touching D1.
+- **Non-blocking analytics.** Click records are written via `waitUntil`, so the redirect returns immediately and never waits on a D1 write.
+- **D1 (SQLite).** Source of truth for links + analytics, with indexes backing dedup and per-link analytics queries.
+- **Rate limiting** on `POST /create`, **link expiry / soft-disable**, **constant-time** API-key auth on analytics endpoints.
+
+```
+src/
+  index.ts            App wiring, CORS, rate limit, error handling
+  types.ts            Bindings + shared types
+  lib/                auth, cache (KV), id, validation, responses
+  routes/             redirect, create, analytics
+  openapi/spec.ts     Swagger spec
+migrations/           D1 migrations (0001_init, 0002_perf_expiry)
+test/                 Vitest (pool-workers) suite
+```
 
 ## Setup & Configuration
 
 ### Prerequisites
 
 - [Cloudflare Workers](https://workers.cloudflare.com/) account
-- [D1 Database](https://developers.cloudflare.com/d1) for data storage
-- Node.js 20+ installed
+- [D1 Database](https://developers.cloudflare.com/d1) + [KV Namespace](https://developers.cloudflare.com/kv)
+- Node.js 20+
 
-### 1. Clone the repository
+### 1. Clone & install
 
 ```bash
 git clone https://github.com/belphegor-s/url-shortner
 cd url-shortner
-```
-
-### 2. Install Dependencies
-
-Install required dependencies using `npm`:
-
-```bash
 npm install
 ```
 
-### 3. Configure Environment Variables
-
-Replace D1 SQL `database_id` in `./wrangler.jsonc`:
-
-```json
-"d1_databases": [
-    {
-        "binding": "DB",
-        "database_name": "url_shortener_db",
-        "database_id": "<your_d1_database_id>"
-    }
-]
-```
-
-### 4. Deploy to Cloudflare Workers
-
-Use the `wrangler` CLI to deploy the application to Cloudflare Workers:
-
-1. Install Wrangler if you haven't already:
+### 2. Provision resources
 
 ```bash
-npm install -g wrangler
+# D1 — set the printed database_id in wrangler.jsonc
+wrangler d1 create url_shortener_db
+
+# KV — set the printed id in wrangler.jsonc (replaces REPLACE_WITH_LINKS_KV_ID)
+wrangler kv namespace create LINKS_KV
 ```
 
-2. Authenticate with Cloudflare:
+Update `wrangler.jsonc` with both ids:
+
+```jsonc
+"d1_databases": [{ "binding": "DB", "database_name": "url_shortener_db", "database_id": "<your_d1_id>", "migrations_dir": "./migrations" }],
+"kv_namespaces": [{ "binding": "LINKS_KV", "id": "<your_kv_id>" }]
+```
+
+### 3. Set the API key
+
+The analytics endpoints are guarded by a bearer token (`API_KEY`).
+
+```bash
+# Production secret
+wrangler secret put API_KEY
+```
+
+For local dev, create `.dev.vars` (gitignored):
+
+```
+API_KEY=local-dev-secret
+```
+
+### 4. Apply migrations
+
+```bash
+npm run migrate:local   # local D1
+npm run migrate         # remote D1
+```
+
+### 5. Run
 
 ```bash
 wrangler login
+npm run dev             # local dev server
+npm run deploy          # deploy to Cloudflare
 ```
 
-3. Deploy the worker:
+## API Endpoints
+
+### `POST /create` — create a short URL
+
+JSON body:
+
+```json
+{
+  "url": "https://example.com",
+  "custom_id": "mycode",        // optional, [a-zA-Z0-9_-]{1,64}, not a reserved word
+  "expires_in": 86400           // optional seconds; or "expires_at": "2026-12-31T23:59:59Z"
+}
+```
+
+Response `201`:
+
+```json
+{
+  "short_url": "https://short.procd.cc/mycode",
+  "id": "mycode",
+  "expires_at": null,
+  "existing": false
+}
+```
+
+Posting an already-shortened URL (no `custom_id`) returns the existing link with `existing: true`. Rate limited per client IP.
+
+### `GET /:id` — redirect
+
+`302` to the original URL and records a click (IP, user-agent, country, referrer). Returns `404` for unknown codes, `410` for expired/inactive links.
+
+### `GET /analytics` — summary _(auth)_
+
+Query params: `page`, `limit` (default 50, max 500), `sort` (`asc`/`desc`).
+
+### `DELETE /analytics` — delete links + analytics _(auth)_
+
+JSON body: `{ "ids": ["abc123", "xyz456"] }`. Also evicts the KV cache.
+
+### `GET /analytics/:id` — per-link detail _(auth)_
+
+Most recent 1000 clicks for one short code.
+
+**Auth:** protected endpoints require `Authorization: Bearer <API_KEY>`.
+
+## Testing
 
 ```bash
-wrangler deploy
+npm test          # Vitest (Cloudflare Workers pool)
+npm run typecheck # tsc --noEmit
 ```
 
-This will deploy the application to Cloudflare Workers, and your API will be accessible at the provided URL.
+## Swagger UI
 
-### 5. API Endpoints
+Interactive docs at the root route `/` — live at [short.procd.cc](https://short.procd.cc).
 
-- **GET `/create`**: Create a short URL from an original URL using query parameters.
+## License
 
-  **Query Parameters**:
-
-  ```bash
-  ?url=https://example.com&custom_id=mycustomid # `custom_id` is optional
-  ```
-
-  **Response**:
-
-  ```json
-  {
-  	"short_url": "https://<your-worker-url>/<short_id>",
-  	"existing": true // Indicates if the URL already existed in the database
-  }
-  ```
-
-- **GET `/analytics`**: Fetch analytics for all short URLs.
-
-  **Query Parameters**:
-
-  - `page` (optional): The page number for pagination.
-  - `limit` (optional): The number of results per page (default: 50, max: 500).
-  - `sort` (optional): Sort order (`asc` or `desc`, default: `desc`).
-
-- **DELETE `/analytics`**: Delete analytics and short URLs for the provided `ids` (`short_id[]`).
-
-  **JSON Body**:
-
-  ```json
-  {
-  	"ids": ["abc123", "xyz456"]
-  }
-  ```
-
-- **GET `/analytics/:id`**: Fetch analytics for a specific short URL ID.
-
-- **GET `/:id`**: Redirect to the original URL for a given short URL ID. This also logs analytics such as IP address, user-agent, country code, and referrer.
-
-### 6. Swagger UI Documentation
-
-Access the API documentation [Here](https://short.pixly.sh) or locally at:
-
-```bash
-/  # root route
-```
-
-This will provide an interactive UI to explore and test the API endpoints.
-
-### 7. License
-
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+MIT — see [LICENSE](LICENSE).
