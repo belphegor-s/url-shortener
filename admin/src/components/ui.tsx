@@ -44,7 +44,8 @@ export function Input({ className, ...props }: InputHTMLAttributes<HTMLInputElem
 	return (
 		<input
 			className={cx(
-				'h-9 w-full rounded-lg border border-border bg-surface-2 px-3 text-sm text-fg placeholder:text-faint',
+				// 16px on mobile prevents iOS Safari auto-zoom on focus; 14px from sm+.
+				'h-9 w-full rounded-lg border border-border bg-surface-2 px-3 text-base text-fg placeholder:text-faint sm:text-sm',
 				'outline-none transition focus:border-accent/60 focus:ring-2 focus:ring-accent/20',
 				className
 			)}

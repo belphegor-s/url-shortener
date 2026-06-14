@@ -67,6 +67,14 @@
 	select {
 		font: inherit;
 	}
+	/* iOS Safari zooms when a focused field's font-size < 16px. Enforce 16px on mobile. */
+	@media (max-width: 639px) {
+		input:not([type='checkbox']):not([type='radio']),
+		select,
+		textarea {
+			font-size: 16px;
+		}
+	}
 	button:not(:disabled),
 	[role='button'],
 	label[for],
