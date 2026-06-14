@@ -37,7 +37,20 @@
 				"period": 60,
 			},
 		},
+		{
+			"name": "LOGIN_LIMITER",
+			"namespace_id": "1002",
+			"simple": {
+				"limit": 5,
+				"period": 60,
+			},
+		},
 	],
+	"assets": {
+		"binding": "ASSETS",
+		"directory": "./dist-admin",
+		"run_worker_first": true,
+	},
 	"routes": [
 		{
 			"pattern": "short.procd.cc",

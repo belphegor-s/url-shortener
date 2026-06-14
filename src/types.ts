@@ -7,6 +7,13 @@ export type Bindings = {
 	LINKS_KV: KVNamespace;
 	/** Rate limit binding applied to POST /create. */
 	CREATE_LIMITER: RateLimiter;
+	/** Rate limit binding applied to admin login (brute-force guard). */
+	LOGIN_LIMITER: RateLimiter;
+	/** Static assets binding serving the built admin dashboard (dist-admin). */
+	ASSETS: Fetcher;
+	/** Admin dashboard credentials (set via `wrangler secret put`). */
+	ADMIN_USERNAME: string;
+	ADMIN_PASSWORD: string;
 	/** Comma-separated list of allowed CORS origins. Use "*" to allow any. */
 	ALLOWED_ORIGINS?: string;
 	/** Public origin used to build short URLs (e.g. https://short.procd.cc). Falls back to request origin. */
@@ -28,5 +35,12 @@ export interface CachedLink {
 	a: boolean;
 }
 
+/** Variables attached to the Hono context by middleware. */
+export type Variables = {
+	/** Present after the admin-auth middleware authenticates a request. */
+	sessionId: string;
+	csrf: string;
+};
+
 /** Hono environment type used across routes. */
-export type AppEnv = { Bindings: Bindings };
+export type AppEnv = { Bindings: Bindings; Variables: Variables };

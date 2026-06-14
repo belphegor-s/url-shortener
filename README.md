@@ -6,19 +6,31 @@ A blazingly fast, production-grade URL shortener built on **Cloudflare Workers +
 
 - **Edge cache (KV).** The redirect hot path (`GET /:id`) is read-through cached in Workers KV — warm short-codes resolve globally at the edge without touching D1.
 - **Non-blocking analytics.** Click records are written via `waitUntil`, so the redirect returns immediately and never waits on a D1 write.
-- **D1 (SQLite).** Source of truth for links + analytics, with indexes backing dedup and per-link analytics queries.
-- **Rate limiting** on `POST /create`, **link expiry / soft-disable**, **constant-time** API-key auth on analytics endpoints.
+- **D1 (SQLite).** Source of truth for links, analytics, and admin sessions, with indexes backing dedup and per-link analytics queries.
+- **Admin dashboard.** A React + Vite SPA served by the Worker at `/admin`, behind session-cookie auth (see below).
+- **Rate limiting** on `POST /create` and admin login, **link expiry / soft-disable**, **constant-time** auth.
 
 ```
 src/
-  index.ts            App wiring, CORS, rate limit, error handling
+  index.ts            App wiring, CORS, rate limit, assets routing, error handling
   types.ts            Bindings + shared types
-  lib/                auth, cache (KV), id, validation, responses
-  routes/             redirect, create, analytics
+  lib/                auth, admin-auth, session, cache (KV), links, id, validation, url, responses
+  routes/             redirect, create, analytics, admin (dashboard API), assets (SPA)
   openapi/spec.ts     Swagger spec
-migrations/           D1 migrations (0001_init, 0002_perf_expiry)
+admin/                React + Vite + Tailwind admin dashboard (builds to ../dist-admin)
+migrations/           D1 migrations (0001_init, 0002_perf_expiry, 0003_sessions)
 test/                 Vitest (pool-workers) suite
 ```
+
+### Admin dashboard
+
+A password-protected, single-user dashboard at `https://<domain>/admin`:
+
+- **Auth** — session cookie (`__Host-session`, HttpOnly, Secure, SameSite=Lax). The token is stored in D1 as a SHA-256 hash; a **synchronizer CSRF token** is required (`X-CSRF-Token`) on all mutations. Login is rate-limited.
+- **Sessions** — every login records IP, user-agent, and country; active sessions are listed and individually **revocable**.
+- **Features** — overview (clicks trend, top links/countries/referrers), link management (create / search / toggle / expiry / delete), per-link click records with search, all fully mobile-responsive.
+
+Credentials come from secrets (`ADMIN_USERNAME`, `ADMIN_PASSWORD`).
 
 ## Setup & Configuration
 
@@ -53,19 +65,22 @@ Update `wrangler.jsonc` with both ids:
 "kv_namespaces": [{ "binding": "LINKS_KV", "id": "<your_kv_id>" }]
 ```
 
-### 3. Set the API key
+### 3. Set secrets
 
-The analytics endpoints are guarded by a bearer token (`API_KEY`).
+The programmatic analytics API uses a bearer token (`API_KEY`); the dashboard uses `ADMIN_USERNAME` / `ADMIN_PASSWORD`.
 
 ```bash
-# Production secret
 wrangler secret put API_KEY
+wrangler secret put ADMIN_USERNAME
+wrangler secret put ADMIN_PASSWORD
 ```
 
 For local dev, create `.dev.vars` (gitignored):
 
 ```
 API_KEY=local-dev-secret
+ADMIN_USERNAME=ayush
+ADMIN_PASSWORD=local-dev-password
 ```
 
 ### 4. Apply migrations
@@ -79,9 +94,17 @@ npm run migrate         # remote D1
 
 ```bash
 wrangler login
-npm run dev             # local dev server
-npm run deploy          # deploy to Cloudflare
+npm run admin:install   # install dashboard deps (once)
+
+# Local dev — two servers:
+npm run dev             # Worker API on :8787
+npm run dev:admin       # dashboard on :5173 (proxies /api to the Worker)
+
+# Deploy (predeploy builds the dashboard into dist-admin automatically):
+npm run deploy
 ```
+
+The dashboard is reachable at `/admin`. In local dev, open the Vite server (`http://localhost:5173/admin`); in production it is served by the Worker from the `ASSETS` binding.
 
 ## API Endpoints
 

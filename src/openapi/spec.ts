@@ -71,19 +71,11 @@ export const spec: SwaggerUIOptions['spec'] = {
 				},
 			},
 		},
-		'/{id}': {
-			get: {
-				summary: 'Resolve a short URL',
-				description: 'Redirects (302) to the original URL and records a click. Returns 410 if the link expired or is inactive.',
-				tags: ['URL Shortener'],
-				parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'string' } }],
-				responses: {
-					302: { description: 'Redirect to the original URL' },
-					404: { description: 'Unknown short code' },
-					410: { description: 'Link expired or inactive' },
-				},
-			},
-		},
+		// NOTE: GET /:id (the redirect) is intentionally not documented as a Swagger operation.
+		// Swagger "Try it out" uses fetch(), which auto-follows the 302 to the target host;
+		// cross-origin targets (e.g. github.com) don't send CORS headers, so the browser blocks
+		// reading the response. The redirect works fine via normal navigation — paste it in the
+		// address bar. Documenting it here only invites that confusing CORS error.
 		'/analytics': {
 			get: {
 				summary: 'Get analytics summary',

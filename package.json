@@ -3,9 +3,13 @@
 	"version": "0.0.0",
 	"private": true,
 	"scripts": {
+		"predeploy": "npm run build:admin",
 		"deploy": "wrangler deploy",
 		"dev": "wrangler dev",
 		"start": "wrangler dev",
+		"admin:install": "npm install --prefix admin",
+		"build:admin": "npm run build --prefix admin",
+		"dev:admin": "npm run dev --prefix admin",
 		"cf-typegen": "wrangler types",
 		"typecheck": "tsc --noEmit",
 		"test": "vitest run",

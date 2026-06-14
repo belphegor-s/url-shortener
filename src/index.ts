@@ -5,13 +5,20 @@ import { swaggerUI } from '@hono/swagger-ui';
 import type { AppEnv } from './types';
 import { spec } from './openapi/spec';
 import { fail } from './lib/responses';
+import { securityHeaders } from './lib/security';
 import { create } from './routes/create';
 import { analytics } from './routes/analytics';
+import { admin } from './routes/admin';
+import { dashboard } from './routes/assets';
+import { favicon } from './routes/favicon';
 import { redirect } from './routes/redirect';
 
 const app = new Hono<AppEnv>();
 
-// --- CORS: origins driven by ALLOWED_ORIGINS env ("*" or comma-separated list). ---
+// Security headers on every response (runs first, wraps everything).
+app.use('*', securityHeaders());
+
+// --- CORS for the public programmatic API. The dashboard API is same-origin (cookies). ---
 app.use('*', (c, next) => {
 	const allowed = (c.env.ALLOWED_ORIGINS ?? '*').split(',').map((s) => s.trim());
 	const origin = allowed.includes('*') ? '*' : (o: string) => (allowed.includes(o) ? o : allowed[0] ?? '');
@@ -34,12 +41,21 @@ app.use('/create', async (c, next) => {
 	await next();
 });
 
-// Swagger UI at root.
+// Admin dashboard (static SPA) + its session API.
+app.route('/', dashboard);
+app.route('/', admin);
+
+// Favicon (before the redirect catch-all).
+app.route('/', favicon);
+
+// Swagger UI for the public API.
 app.get('/', swaggerUI({ spec, urls: [], title: 'URL Shortener API' }));
 
-// Routes (redirect catch-all must stay last so it doesn't shadow the others).
+// Public API.
 app.route('/', create);
 app.route('/', analytics);
+
+// Redirect catch-all — must stay last so it never shadows the routes above.
 app.route('/', redirect);
 
 app.notFound((c) => fail(c, 404, 'not_found', 'Resource not found'));

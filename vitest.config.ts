@@ -14,7 +14,12 @@ export default defineWorkersConfig(async () => {
 					wrangler: { configPath: './wrangler.jsonc' },
 					miniflare: {
 						// Test-only bindings (unsafe ratelimit binding is not simulated; the route fails open).
-						bindings: { API_KEY: 'test-secret', TEST_MIGRATIONS: migrations },
+						bindings: {
+							API_KEY: 'test-secret',
+							ADMIN_USERNAME: 'ayush',
+							ADMIN_PASSWORD: 'test-password',
+							TEST_MIGRATIONS: migrations,
+						},
 					},
 				},
 			},

@@ -1,0 +1,110 @@
+@import 'tailwindcss';
+
+/* ---- Design tokens: dark, Linear-style ---- */
+@theme {
+	--color-bg: #0a0a0b;
+	--color-surface: #121214;
+	--color-surface-2: #18181b;
+	--color-elevated: #1d1d21;
+	--color-border: #232327;
+	--color-border-strong: #2e2e33;
+	--color-fg: #ededef;
+	--color-muted: #9a9aa3;
+	--color-faint: #6a6a73;
+	--color-accent: #7c5cff;
+	--color-accent-fg: #ffffff;
+	--color-success: #3fb950;
+	--color-danger: #f85149;
+	--color-warn: #d29922;
+
+	--font-sans: 'Inter', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
+	--font-mono: 'JetBrains Mono', ui-monospace, 'SF Mono', 'Menlo', monospace;
+
+	--radius: 0.75rem;
+}
+
+@layer base {
+	* {
+		border-color: var(--color-border);
+	}
+	html {
+		-webkit-text-size-adjust: 100%;
+	}
+	html,
+	body {
+		overflow-x: hidden;
+		max-width: 100%;
+	}
+	body {
+		margin: 0;
+		background-color: var(--color-bg);
+		color: var(--color-fg);
+		font-family: var(--font-sans);
+		font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv11';
+		-webkit-font-smoothing: antialiased;
+		text-rendering: optimizeLegibility;
+	}
+	::selection {
+		background: color-mix(in srgb, var(--color-accent) 35%, transparent);
+	}
+	/* Subtle scrollbars */
+	* {
+		scrollbar-width: thin;
+		scrollbar-color: var(--color-border-strong) transparent;
+	}
+	*::-webkit-scrollbar {
+		width: 9px;
+		height: 9px;
+	}
+	*::-webkit-scrollbar-thumb {
+		background: var(--color-border-strong);
+		border-radius: 9999px;
+		border: 2px solid transparent;
+		background-clip: content-box;
+	}
+	input,
+	button,
+	select {
+		font: inherit;
+	}
+	button:not(:disabled),
+	[role='button'],
+	label[for],
+	summary {
+		cursor: pointer;
+	}
+	button:disabled {
+		cursor: not-allowed;
+	}
+	input[type='checkbox'],
+	input[type='radio'] {
+		cursor: pointer;
+	}
+}
+
+@layer utilities {
+	.tabular {
+		font-variant-numeric: tabular-nums;
+	}
+	.glass {
+		background: color-mix(in srgb, var(--color-bg) 72%, transparent);
+		backdrop-filter: blur(12px);
+	}
+	/* Accent radial glow used behind hero numbers */
+	.accent-glow {
+		background: radial-gradient(120% 120% at 0% 0%, color-mix(in srgb, var(--color-accent) 16%, transparent), transparent 60%);
+	}
+	.animate-in {
+		animation: fade-in 0.35s ease both;
+	}
+	@keyframes fade-in {
+		from {
+			opacity: 0;
+			transform: translateY(4px);
+		}
+		to {
+			opacity: 1;
+			transform: none;
+		}
+	}
+}
