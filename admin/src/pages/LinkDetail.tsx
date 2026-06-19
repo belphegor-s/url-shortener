@@ -5,7 +5,8 @@ import { api, type ClickRecord } from '../lib/api';
 import { Button, Card, Input, Badge, CopyButton, Spinner, EmptyState, ConfirmDialog, cx } from '../components/ui';
 import { TrendChart, BarList } from '../components/charts';
 import { IconSearch, IconExternal, IconTrash, IconPower, IconChevron, IconGlobe } from '../components/icons';
-import { full, fmtDate, relative, flag, hostOf, uaLabel } from '../lib/format';
+import { full, fmtDate, relative, hostOf, uaLabel } from '../lib/format';
+import { Flag } from '../components/Flag';
 
 function useDebounced<T>(value: T, ms = 300): T {
 	const [v, setV] = useState(value);
@@ -113,7 +114,7 @@ export default function LinkDetail() {
 						{data.by_country.length === 0 ? (
 							<EmptyState icon={<IconGlobe className="size-5" />} title="No data" />
 						) : (
-							<BarList items={data.by_country.map((c) => ({ label: c.country_code, leading: <span className="text-base leading-none">{flag(c.country_code)}</span>, value: c.clicks }))} />
+							<BarList items={data.by_country.map((c) => ({ label: c.country_code, leading: <Flag code={c.country_code} className="text-[17px]" />, value: c.clicks }))} />
 						)}
 					</Card>
 				</div>
@@ -180,7 +181,7 @@ function RecordRow({ r }: { r: ClickRecord }) {
 		<div className="grid grid-cols-1 gap-1 px-4 py-3 text-sm sm:grid-cols-[150px_120px_minmax(0,1fr)_minmax(0,1fr)] sm:gap-3">
 			<div className="min-w-0 truncate text-fg" title={r.timestamp}>{relative(r.timestamp)}</div>
 			<div className="flex min-w-0 items-center gap-1.5 text-muted">
-				<span className="leading-none">{flag(r.country_code)}</span>
+				<Flag code={r.country_code} className="text-[15px]" />
 				<span className="truncate font-mono text-[12px]">{r.ip || '—'}</span>
 			</div>
 			<div className="min-w-0 truncate text-muted" title={r.user_agent}>{uaLabel(r.user_agent)}</div>

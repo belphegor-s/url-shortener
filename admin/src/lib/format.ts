@@ -29,14 +29,6 @@ export const relative = (input: string | number | null): string => {
 	return fmtDate(input);
 };
 
-/** Country code -> emoji flag. */
-export const flag = (code: string | null): string => {
-	if (!code || code.length !== 2) return '🏳️';
-	const cc = code.toUpperCase();
-	if (cc === 'T1' || cc === 'XX') return '🏴‍☠️';
-	return String.fromCodePoint(...[...cc].map((ch) => 0x1f1e6 + ch.charCodeAt(0) - 65));
-};
-
 /** Hostname of a URL for display. */
 export const hostOf = (url: string): string => {
 	try {

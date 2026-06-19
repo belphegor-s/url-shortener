@@ -3,7 +3,8 @@ import { api } from '../lib/api';
 import { PageHeader } from '../components/Layout';
 import { Card, Skeleton, EmptyState } from '../components/ui';
 import { TrendChart, BarList } from '../components/charts';
-import { compact, full, flag, hostOf } from '../lib/format';
+import { compact, full, hostOf } from '../lib/format';
+import { Flag } from '../components/Flag';
 import { IconChart, IconGlobe, IconLink } from '../components/icons';
 
 function Stat({ label, value, sub }: { label: string; value: string; sub?: string }) {
@@ -57,7 +58,7 @@ export default function Overview() {
 					<BarList
 						items={data.top_countries.map((c) => ({
 							label: c.country_code,
-							leading: <span className="text-base leading-none">{flag(c.country_code)}</span>,
+							leading: <Flag code={c.country_code} className="text-[17px]" />,
 							value: c.clicks,
 						}))}
 					/>

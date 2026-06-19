@@ -5,7 +5,8 @@ import { PageHeader } from '../components/Layout';
 import { useState } from 'react';
 import { Button, Card, Badge, Spinner, EmptyState, ConfirmDialog, cx } from '../components/ui';
 import { IconUsers, IconGlobe } from '../components/icons';
-import { fmtDate, relative, flag, uaLabel } from '../lib/format';
+import { fmtDate, relative, uaLabel } from '../lib/format';
+import { Flag } from '../components/Flag';
 
 export default function Sessions() {
 	const qc = useQueryClient();
@@ -37,7 +38,7 @@ export default function Sessions() {
 					{data.data.map((s) => (
 						<Card key={s.id} className={cx('flex flex-col gap-3 p-4 sm:flex-row sm:items-center', s.current && 'border-accent/30')}>
 							<div className="flex min-w-0 flex-1 items-start gap-3">
-								<div className="grid size-10 shrink-0 place-items-center rounded-xl border border-border bg-surface-2 text-lg">{flag(s.country_code)}</div>
+								<div className="grid size-10 shrink-0 place-items-center rounded-xl border border-border bg-surface-2"><Flag code={s.country_code} className="text-[20px]" /></div>
 								<div className="min-w-0 flex-1">
 									<div className="flex min-w-0 items-center gap-2">
 										<span className="truncate text-sm font-medium text-fg">{uaLabel(s.user_agent)}</span>
