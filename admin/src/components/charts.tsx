@@ -68,7 +68,7 @@ interface BarItem {
 export function BarList({ items, className }: { items: BarItem[]; className?: string }) {
 	const max = Math.max(1, ...items.map((i) => i.value));
 	return (
-		<div className={cx('flex flex-col', className)}>
+		<div className={cx('flex flex-col gap-1', className)}>
 			{items.map((it, i) => (
 				<div key={i} className="group relative flex items-center justify-between gap-3 overflow-hidden rounded-md px-2.5 py-2">
 					<div
