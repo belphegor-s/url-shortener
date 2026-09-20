@@ -8,6 +8,7 @@ export const SESSION_TTL_MS = 30 * 24 * 60 * 60 * 1000; // 30 days
 export interface SessionRow {
 	id: string;
 	csrf: string;
+	user_id: string | null;
 	ip: string | null;
 	user_agent: string | null;
 	country_code: string | null;
@@ -46,9 +47,10 @@ export interface NewSession {
 	csrf: string;
 }
 
-/** Create + persist a session. Returns the raw token (for the cookie) and csrf (for the client). */
+/** Create + persist a session bound to a user. Returns the raw token (for the cookie) and csrf (for the client). */
 export async function createSession(
 	env: Bindings,
+	userId: string,
 	meta: { ip: string; userAgent: string; country: string }
 ): Promise<NewSession> {
 	const token = randomToken();
@@ -56,9 +58,9 @@ export async function createSession(
 	const csrf = randomToken(24);
 	const now = Date.now();
 	await env.DB.prepare(
-		`INSERT INTO sessions (id, csrf, ip, user_agent, country_code, created_at, last_seen, expires_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`
+		`INSERT INTO sessions (id, csrf, user_id, ip, user_agent, country_code, created_at, last_seen, expires_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`
 	)
-		.bind(id, csrf, meta.ip, meta.userAgent, meta.country, now, now, now + SESSION_TTL_MS)
+		.bind(id, csrf, userId, meta.ip, meta.userAgent, meta.country, now, now, now + SESSION_TTL_MS)
 		.run();
 	return { token, id, csrf };
 }
@@ -69,6 +71,8 @@ export async function getSession(env: Bindings, token: string | undefined): Prom
 	const id = await sha256Hex(token);
 	const row = await env.DB.prepare(`SELECT * FROM sessions WHERE id = ?`).bind(id).first<SessionRow>();
 	if (!row) return null;
+	// Pre-auth (legacy) sessions have no user binding and are treated as invalid.
+	if (!row.user_id) return null;
 	if (row.expires_at <= Date.now()) {
 		await revokeSession(env, id);
 		return null;
@@ -86,8 +90,10 @@ export function touchSession(env: Bindings, id: string, meta: { ip: string; coun
 export const revokeSession = (env: Bindings, id: string): Promise<unknown> =>
 	env.DB.prepare(`DELETE FROM sessions WHERE id = ?`).bind(id).run();
 
-export const listSessions = (env: Bindings): Promise<{ results: SessionRow[] }> =>
-	env.DB.prepare(`SELECT * FROM sessions WHERE expires_at > ? ORDER BY last_seen DESC`).bind(Date.now()).all<SessionRow>();
+export const listSessions = (env: Bindings, userId: string): Promise<{ results: SessionRow[] }> =>
+	env.DB.prepare(`SELECT * FROM sessions WHERE user_id = ? AND expires_at > ? ORDER BY last_seen DESC`)
+		.bind(userId, Date.now())
+		.all<SessionRow>();
 
 /** Build the Set-Cookie value for a fresh session. */
 export const sessionCookie = (token: string): string =>

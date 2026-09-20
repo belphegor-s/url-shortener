@@ -1,13 +1,20 @@
 import { env, createExecutionContext, waitOnExecutionContext } from 'cloudflare:test';
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, beforeAll } from 'vitest';
 import worker from '../src/index';
+import { seedUser, seedApiKey } from './helpers';
+
+let bearer = '';
+beforeAll(async () => {
+	const user = await seedUser();
+	bearer = `Bearer ${await seedApiKey(user.id)}`;
+});
 
 const post = async (body: unknown) => {
 	const ctx = createExecutionContext();
 	const res = await worker.fetch(
 		new Request('https://short.test/create', {
 			method: 'POST',
-			headers: { 'content-type': 'application/json' },
+			headers: { 'content-type': 'application/json', authorization: bearer },
 			body: JSON.stringify(body),
 		}),
 		env,
@@ -18,6 +25,17 @@ const post = async (body: unknown) => {
 };
 
 describe('POST /create', () => {
+	it('rejects unauthenticated creates', async () => {
+		const ctx = createExecutionContext();
+		const res = await worker.fetch(
+			new Request('https://short.test/create', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ url: 'https://example.com' }) }),
+			env,
+			ctx
+		);
+		await waitOnExecutionContext(ctx);
+		expect(res.status).toBe(401);
+	});
+
 	it('creates a short url for a valid url', async () => {
 		const res = await post({ url: 'https://example.com/a' });
 		expect(res.status).toBe(201);

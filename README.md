@@ -1,121 +1,140 @@
-# URL Shortener API with Analytics
+# SHRT — URL Shortener with Edge Analytics
 
-A blazingly fast, production-grade URL shortener built on **Cloudflare Workers + D1 + KV**, using [Hono](https://hono.dev). Create short URLs, redirect at the edge, and track per-click analytics.
+**Short links, long reach.** A production-grade, multi-user URL shortener built on **Cloudflare Workers + D1 + KV** with [Hono](https://hono.dev). GitHub sign-in, edge-cached redirects, per-click analytics, a server-rendered marketing site, and dynamic OG images.
+
+## Highlights
+
+- **Edge-cached redirects.** `GET /:id` is read-through cached in Workers KV, so warm short codes resolve at the edge without touching D1.
+- **Non-blocking analytics.** Clicks are written via `waitUntil`, so the redirect never waits on a D1 write.
+- **GitHub OAuth.** Passwordless sign-in. Each account gets a private dashboard; links are scoped to their owner.
+- **Server-rendered landing page.** Zero-build HTML/CSS with light & dark themes, grid-pattern background, proper meta tags, JSON-LD, and a dynamic PNG OG image (`/og.png`).
+- **Platform admins.** Accounts listed in `ADMIN_GITHUB_LOGIN` / `ADMIN_GITHUB_EMAIL` get an all-users view and a users directory.
+- **Hardened.** Session cookies (`__Host-` prefix), hashed session tokens, synchronizer CSRF, constant-time auth, rate limiting, single-use OAuth state, and a strict CSP.
 
 ## Architecture
 
-- **Edge cache (KV).** The redirect hot path (`GET /:id`) is read-through cached in Workers KV — warm short-codes resolve globally at the edge without touching D1.
-- **Non-blocking analytics.** Click records are written via `waitUntil`, so the redirect returns immediately and never waits on a D1 write.
-- **D1 (SQLite).** Source of truth for links, analytics, and admin sessions, with indexes backing dedup and per-link analytics queries.
-- **Admin dashboard.** A React + Vite SPA served by the Worker at `/admin`, behind session-cookie auth (see below).
-- **Rate limiting** on `POST /create` and admin login, **link expiry / soft-disable**, **constant-time** auth.
-
 ```
 src/
-  index.ts            App wiring, CORS, rate limit, assets routing, error handling
+  index.ts            App wiring, CORS, rate limit, routing, error handling
   types.ts            Bindings + shared types
-  lib/                auth, admin-auth, session, cache (KV), links, id, validation, url, responses
-  routes/             redirect, create, analytics, admin (dashboard API), assets (SPA)
-  openapi/spec.ts     Swagger spec
-admin/                React + Vite + Tailwind admin dashboard (builds to ../dist-admin)
-migrations/           D1 migrations (0001_init, 0002_perf_expiry, 0003_sessions)
+  lib/                oauth, users, session, guards, links, cache (KV), id, validation, url, security, responses
+  routes/             home (landing/site) · og · auth (GitHub) · api (dashboard) · create · analytics · assets · favicon · redirect
+  landing/            Server-rendered landing page (page, styles, icons, script)
+  openapi/spec.ts     Swagger spec (served at /docs)
+admin/                React + Vite + Tailwind dashboard (builds to ../dist-admin, served at /dashboard)
+migrations/           D1 migrations (0001 init … 0004 users)
 test/                 Vitest (pool-workers) suite
 ```
 
-### Admin dashboard
+### Routes
 
-A password-protected, single-user dashboard at `https://<domain>/admin`:
+| Route | Description |
+| --- | --- |
+| `/` | Server-rendered landing page (theme toggle, inline shortener when signed in) |
+| `/docs` | Swagger UI for the public API |
+| `/og.png` | Dynamically generated social card (KV-cached) |
+| `/auth/github` → `/auth/github/callback` | GitHub OAuth flow |
+| `/dashboard` | React dashboard (Overview, Links, per-link analytics, Sessions, Users*) |
+| `/api/*` | Dashboard JSON API (session + CSRF) |
+| `/create` | Programmatic API — session **or** `Authorization: Bearer <account API key>` |
+| `/analytics` | Programmatic analytics API — account API key, scoped to that account |
+| `/:id` | Redirect (302) + click recording |
 
-- **Auth** — session cookie (`__Host-session`, HttpOnly, Secure, SameSite=Lax). The token is stored in D1 as a SHA-256 hash; a **synchronizer CSRF token** is required (`X-CSRF-Token`) on all mutations. Login is rate-limited.
-- **Sessions** — every login records IP, user-agent, and country; active sessions are listed and individually **revocable**.
-- **Features** — overview (clicks trend, top links/countries/referrers), link management (create / search / toggle / expiry / delete), per-link click records with search, all fully mobile-responsive.
+\* Users directory is visible to platform admins only.
 
-Credentials come from secrets (`ADMIN_USERNAME`, `ADMIN_PASSWORD`).
-
-## Setup & Configuration
+## Setup
 
 ### Prerequisites
 
-- [Cloudflare Workers](https://workers.cloudflare.com/) account
-- [D1 Database](https://developers.cloudflare.com/d1) + [KV Namespace](https://developers.cloudflare.com/kv)
+- A Cloudflare Workers account
+- [D1](https://developers.cloudflare.com/d1) database + [KV](https://developers.cloudflare.com/kv) namespace
 - Node.js 20+
+- A GitHub account (to create an OAuth App)
 
 ### 1. Clone & install
 
 ```bash
-git clone https://github.com/belphegor-s/url-shortner
-cd url-shortner
+git clone https://github.com/belphegor-s/url-shortener
+cd url-shortener
 npm install
+npm run admin:install
 ```
 
-### 2. Provision resources
+### 2. Provision resources & configure
 
 ```bash
-# D1 — set the printed database_id in wrangler.jsonc
 wrangler d1 create url_shortener_db
-
-# KV — set the printed id in wrangler.jsonc (replaces REPLACE_WITH_LINKS_KV_ID)
 wrangler kv namespace create LINKS_KV
 ```
 
-Update `wrangler.jsonc` with both ids:
+Put the printed ids into `wrangler.jsonc` (`d1_databases[].database_id`, `kv_namespaces[].id`).
 
-```jsonc
-"d1_databases": [{ "binding": "DB", "database_name": "url_shortener_db", "database_id": "<your_d1_id>", "migrations_dir": "./migrations" }],
-"kv_namespaces": [{ "binding": "LINKS_KV", "id": "<your_kv_id>" }]
-```
+### 3. Create a GitHub OAuth App
 
-### 3. Set secrets
+GitHub → **Settings → Developer settings → OAuth Apps → New OAuth App**:
 
-The programmatic analytics API uses a bearer token (`API_KEY`); the dashboard uses `ADMIN_USERNAME` / `ADMIN_PASSWORD`.
+- **Application name:** SHRT
+- **Homepage URL:** `https://short.procd.cc`
+- **Authorization callback URL:** `https://short.procd.cc/auth/github/callback`
+
+For local development, add a second OAuth App (or use the same one and swap the callback) pointing at `http://localhost:8787/auth/github/callback`.
+
+Then set the client id in `wrangler.jsonc` (`GITHUB_CLIENT_ID`) and the secret as a Worker secret:
 
 ```bash
-wrangler secret put API_KEY
-wrangler secret put ADMIN_USERNAME
-wrangler secret put ADMIN_PASSWORD
+wrangler secret put GITHUB_CLIENT_SECRET
 ```
 
-For local dev, create `.dev.vars` (gitignored):
+> There is **no global API key.** Programmatic access uses per-account keys created in the dashboard (**API keys** → New key), scoped to that account and revocable at any time.
 
-```
-API_KEY=local-dev-secret
-ADMIN_USERNAME=ayush
-ADMIN_PASSWORD=local-dev-password
+### 4. Admins
+
+`wrangler.jsonc` already designates the platform admin(s):
+
+```jsonc
+"ADMIN_GITHUB_LOGIN": "belphegor-s",
+"ADMIN_GITHUB_EMAIL": "ayush2162002@gmail.com"
 ```
 
-### 4. Apply migrations
+Both are comma-separated allow-lists (case-insensitive). A user is granted the `admin` role on sign-in if their GitHub login **or** verified email matches. The role is sticky: an existing admin is never downgraded, so removing the env var won't lock you out.
+
+### 5. Migrate
 
 ```bash
 npm run migrate:local   # local D1
 npm run migrate         # remote D1
 ```
 
-### 5. Run
+### 6. Run
 
 ```bash
-wrangler login
-npm run admin:install   # install dashboard deps (once)
+# Worker on :8787 (landing, API, redirects, OAuth)
+npm run dev
 
-# Local dev — two servers:
-npm run dev             # Worker API on :8787
-npm run dev:admin       # dashboard on :5173 (proxies /api to the Worker)
-
-# Deploy (predeploy builds the dashboard into dist-admin automatically):
-npm run deploy
+# Dashboard on :5173 (proxies /api, /auth, /create to the Worker)
+npm run dev:admin
 ```
 
-The dashboard is reachable at `/admin`. In local dev, open the Vite server (`http://localhost:5173/admin`); in production it is served by the Worker from the `ASSETS` binding.
+Open `http://localhost:5173/dashboard` for the SPA, or `http://localhost:8787` for the landing page. OAuth requires the local callback URL to be registered on the GitHub OAuth App.
 
-## API Endpoints
+## Deploy
 
-### `POST /create` — create a short URL
+```bash
+npm run deploy   # predeploy builds the dashboard, then wrangler deploy
+```
 
-JSON body:
+The Worker serves the built SPA from the `ASSETS` binding at `/dashboard`.
+
+## API
+
+### `POST /create`
+
+Auth: either a signed-in session cookie, or `Authorization: Bearer <account API key>` (create keys in the dashboard). Created links are owned by that account.
 
 ```json
 {
   "url": "https://example.com",
-  "custom_id": "mycode",        // optional, [a-zA-Z0-9_-]{1,64}, not a reserved word
+  "custom_id": "mycode",        // optional, [a-zA-Z0-9_-]{1,64}, not reserved
   "expires_in": 86400           // optional seconds; or "expires_at": "2026-12-31T23:59:59Z"
 }
 ```
@@ -123,33 +142,16 @@ JSON body:
 Response `201`:
 
 ```json
-{
-  "short_url": "https://short.procd.cc/mycode",
-  "id": "mycode",
-  "expires_at": null,
-  "existing": false
-}
+{ "short_url": "https://short.procd.cc/mycode", "id": "mycode", "expires_at": null, "existing": false }
 ```
 
-Posting an already-shortened URL (no `custom_id`) returns the existing link with `existing: true`. Rate limited per client IP.
+### `GET /:id`
 
-### `GET /:id` — redirect
+`302` to the target and records a click. `404` unknown, `410` expired/inactive.
 
-`302` to the original URL and records a click (IP, user-agent, country, referrer). Returns `404` for unknown codes, `410` for expired/inactive links.
+### `GET /analytics` · `GET /analytics/:id` · `DELETE /analytics` _(account API key)_
 
-### `GET /analytics` — summary _(auth)_
-
-Query params: `page`, `limit` (default 50, max 500), `sort` (`asc`/`desc`).
-
-### `DELETE /analytics` — delete links + analytics _(auth)_
-
-JSON body: `{ "ids": ["abc123", "xyz456"] }`. Also evicts the KV cache.
-
-### `GET /analytics/:id` — per-link detail _(auth)_
-
-Most recent 1000 clicks for one short code.
-
-**Auth:** protected endpoints require `Authorization: Bearer <API_KEY>`.
+Paginated summaries, a per-link click log, and batch deletion — all scoped to the key's owner. See `/docs`.
 
 ## Testing
 
@@ -157,10 +159,6 @@ Most recent 1000 clicks for one short code.
 npm test          # Vitest (Cloudflare Workers pool)
 npm run typecheck # tsc --noEmit
 ```
-
-## Swagger UI
-
-Interactive docs at the root route `/` — live at [short.procd.cc](https://short.procd.cc).
 
 ## License
 

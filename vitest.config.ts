@@ -15,9 +15,10 @@ export default defineWorkersConfig(async () => {
 					miniflare: {
 						// Test-only bindings (unsafe ratelimit binding is not simulated; the route fails open).
 						bindings: {
-							API_KEY: 'test-secret',
-							ADMIN_USERNAME: 'ayush',
-							ADMIN_PASSWORD: 'test-password',
+							GITHUB_CLIENT_ID: 'test-client-id',
+							GITHUB_CLIENT_SECRET: 'test-client-secret',
+							ADMIN_GITHUB_LOGIN: 'belphegor-s',
+							ADMIN_GITHUB_EMAIL: 'admin@example.com',
 							TEST_MIGRATIONS: migrations,
 						},
 					},

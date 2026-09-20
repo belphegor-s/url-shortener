@@ -6,9 +6,12 @@ import type { AppEnv } from './types';
 import { spec } from './openapi/spec';
 import { fail } from './lib/responses';
 import { securityHeaders } from './lib/security';
+import { home } from './routes/home';
+import { og } from './routes/og';
 import { create } from './routes/create';
 import { analytics } from './routes/analytics';
-import { admin } from './routes/admin';
+import { auth } from './routes/auth';
+import { api } from './routes/api';
 import { dashboard } from './routes/assets';
 import { favicon } from './routes/favicon';
 import { redirect } from './routes/redirect';
@@ -41,17 +44,28 @@ app.use('/create', async (c, next) => {
 	await next();
 });
 
-// Admin dashboard (static SPA) + its session API.
-app.route('/', dashboard);
-app.route('/', admin);
+// Landing page + static site routes (robots, sitemap, manifest, landing.js).
+app.route('/', home);
+
+// Dynamic social image.
+app.route('/', og);
 
 // Favicon (before the redirect catch-all).
 app.route('/', favicon);
 
-// Swagger UI for the public API.
-app.get('/', swaggerUI({ spec, urls: [], title: 'URL Shortener API' }));
+// GitHub OAuth + logout.
+app.route('/', auth);
 
-// Public API.
+// Dashboard SPA (static) served under /dashboard.
+app.route('/', dashboard);
+
+// Swagger UI for the public API.
+app.get('/docs', swaggerUI({ spec, urls: [], title: 'SHRT API' }));
+
+// Dashboard JSON API (sessions).
+app.route('/', api);
+
+// Public programmatic API.
 app.route('/', create);
 app.route('/', analytics);
 

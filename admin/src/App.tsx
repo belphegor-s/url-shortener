@@ -10,9 +10,11 @@ const Overview = lazy(() => import('./pages/Overview'));
 const Links = lazy(() => import('./pages/Links'));
 const LinkDetail = lazy(() => import('./pages/LinkDetail'));
 const Sessions = lazy(() => import('./pages/Sessions'));
+const ApiKeys = lazy(() => import('./pages/ApiKeys'));
+const Users = lazy(() => import('./pages/Users'));
 
 export default function App() {
-	const { status } = useAuth();
+	const { status, user } = useAuth();
 
 	if (status === 'loading') {
 		return (
@@ -31,6 +33,8 @@ export default function App() {
 				<Route path="links" element={<Links />} />
 				<Route path="links/:id" element={<LinkDetail />} />
 				<Route path="sessions" element={<Sessions />} />
+				<Route path="keys" element={<ApiKeys />} />
+				{user?.role === 'admin' && <Route path="users" element={<Users />} />}
 				<Route path="*" element={<Navigate to="/" replace />} />
 			</Route>
 		</Routes>

@@ -2,19 +2,23 @@ import { Suspense, useState } from 'react';
 import { NavLink, Outlet, useLocation } from 'react-router-dom';
 import { AnimatePresence, motion } from 'motion/react';
 import { useAuth } from '../lib/auth';
-import { Button, Spinner, cx } from './ui';
-import { IconChart, IconLink, IconUsers, IconLogout, IconMenu, IconX } from './icons';
+import { Button, Spinner, Badge, cx } from './ui';
+import { IconChart, IconLink, IconUsers, IconKey, IconLogout, IconMenu, IconX } from './icons';
 
 const NAV = [
 	{ to: '/', label: 'Overview', icon: IconChart, end: true },
 	{ to: '/links', label: 'Links', icon: IconLink, end: false },
+	{ to: '/keys', label: 'API keys', icon: IconKey, end: false },
 	{ to: '/sessions', label: 'Sessions', icon: IconUsers, end: false },
 ];
 
-function NavItems({ onNavigate, indicatorId }: { onNavigate?: () => void; indicatorId: string }) {
+const ADMIN_NAV = [{ to: '/users', label: 'Users', icon: IconUsers, end: false }];
+
+function NavItems({ onNavigate, indicatorId, admin }: { onNavigate?: () => void; indicatorId: string; admin: boolean }) {
+	const items = admin ? [...NAV, ...ADMIN_NAV] : NAV;
 	return (
 		<nav className="flex flex-col gap-1">
-			{NAV.map(({ to, label, icon: Icon, end }) => (
+			{items.map(({ to, label, icon: Icon, end }) => (
 				<NavLink
 					key={to}
 					to={to}
@@ -53,8 +57,8 @@ function Brand() {
 				<IconLink className="size-4" />
 			</div>
 			<div className="leading-tight">
-				<div className="text-sm font-semibold text-fg">Shortener</div>
-				<div className="text-[11px] text-faint">admin</div>
+				<div className="text-sm font-semibold text-fg">SHRT</div>
+				<div className="text-[11px] text-faint">dashboard</div>
 			</div>
 		</div>
 	);
@@ -64,7 +68,26 @@ export default function Layout() {
 	const { user, logout } = useAuth();
 	const [open, setOpen] = useState(false);
 	const loc = useLocation();
-	const title = NAV.find((n) => (n.end ? loc.pathname === n.to : loc.pathname.startsWith(n.to) && n.to !== '/'))?.label ?? 'Overview';
+	const admin = user?.role === 'admin';
+	const nav = admin ? [...NAV, ...ADMIN_NAV] : NAV;
+	const title = nav.find((n) => (n.end ? loc.pathname === n.to : loc.pathname.startsWith(n.to) && n.to !== '/'))?.label ?? 'Overview';
+
+	const identity = (
+		<div className="flex min-w-0 items-center gap-2">
+			{user?.avatarUrl ? (
+				<img src={user.avatarUrl} alt="" width={28} height={28} className="size-7 rounded-full border border-border" referrerPolicy="no-referrer" />
+			) : (
+				<div className="grid size-7 place-items-center rounded-full bg-surface-2 text-xs font-semibold text-muted">{user?.login?.[0]?.toUpperCase() ?? '?'}</div>
+			)}
+			<div className="min-w-0 leading-tight">
+				<div className="flex items-center gap-1.5">
+					<span className="truncate text-sm text-fg">{user?.name || user?.login}</span>
+					{admin && <Badge tone="accent">admin</Badge>}
+				</div>
+				<div className="truncate text-[11px] text-faint">@{user?.login}</div>
+			</div>
+		</div>
+	);
 
 	return (
 		<div className="min-h-dvh">
@@ -72,17 +95,12 @@ export default function Layout() {
 			<aside className="fixed inset-y-0 left-0 hidden w-60 flex-col border-r border-border bg-surface/40 px-3 py-5 lg:flex">
 				<Brand />
 				<div className="mt-7 px-0">
-					<NavItems indicatorId="nav-desktop" />
+					<NavItems indicatorId="nav-desktop" admin={admin} />
 				</div>
 				<div className="mt-auto border-t border-border px-1 pt-4">
-					<div className="flex items-center justify-between px-2">
-						<div className="flex items-center gap-2">
-							<div className="grid size-7 place-items-center rounded-full bg-surface-2 text-xs font-semibold text-muted">
-								{user?.[0]?.toUpperCase()}
-							</div>
-							<span className="text-sm text-fg">{user}</span>
-						</div>
-						<button onClick={logout} title="Sign out" className="grid size-8 place-items-center rounded-lg text-faint transition hover:bg-surface-2 hover:text-danger">
+					<div className="flex items-center justify-between gap-2 px-2">
+						{identity}
+						<button onClick={logout} title="Sign out" className="grid size-8 shrink-0 place-items-center rounded-lg text-faint transition hover:bg-surface-2 hover:text-danger">
 							<IconLogout className="size-[18px]" />
 						</button>
 					</div>
@@ -112,8 +130,9 @@ export default function Layout() {
 							</button>
 						</div>
 						<div className="mt-7">
-							<NavItems onNavigate={() => setOpen(false)} indicatorId="nav-mobile" />
+							<NavItems onNavigate={() => setOpen(false)} indicatorId="nav-mobile" admin={admin} />
 						</div>
+						<div className="mt-6 border-t border-border pt-4">{identity}</div>
 					</div>
 				</div>
 			)}

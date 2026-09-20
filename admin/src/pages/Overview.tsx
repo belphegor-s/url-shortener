@@ -1,7 +1,9 @@
+import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { api } from '../lib/api';
+import { api, type Scope } from '../lib/api';
+import { useAuth } from '../lib/auth';
 import { PageHeader } from '../components/Layout';
-import { Card, Skeleton, EmptyState } from '../components/ui';
+import { Card, Skeleton, EmptyState, cx } from '../components/ui';
 import { TrendChart, BarList } from '../components/charts';
 import { compact, full, hostOf } from '../lib/format';
 import { Flag } from '../components/Flag';
@@ -21,14 +23,21 @@ function Stat({ label, value, sub }: { label: string; value: string; sub?: strin
 }
 
 export default function Overview() {
-	const { data, isLoading } = useQuery({ queryKey: ['overview'], queryFn: api.overview });
+	const { user } = useAuth();
+	const [scope, setScope] = useState<Scope>('mine');
+	const { data, isLoading } = useQuery({ queryKey: ['overview', scope], queryFn: () => api.overview(scope) });
 
 	if (isLoading || !data) return <OverviewSkeleton />;
 	const t = data.totals;
+	const all = scope === 'all';
 
 	return (
 		<div>
-			<PageHeader title="Overview" subtitle="Traffic across all your short links" />
+			<PageHeader
+				title="Overview"
+				subtitle={all ? 'Platform-wide traffic across every account' : 'Traffic across all your short links'}
+				action={user?.role === 'admin' ? <ScopeToggle scope={scope} onChange={setScope} /> : undefined}
+			/>
 
 			<div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
 				<Stat label="Total clicks" value={full(t.clicks)} sub={`${compact(t.clicks_7d)} in last 7 days`} />
@@ -77,6 +86,22 @@ function Panel({ title, children, empty, emptyIcon }: { title: string; children:
 			<h2 className="mb-3 px-1 text-sm font-semibold text-fg">{title}</h2>
 			{empty ? <EmptyState icon={emptyIcon} title="No data yet" /> : children}
 		</Card>
+	);
+}
+
+export function ScopeToggle({ scope, onChange }: { scope: Scope; onChange: (s: Scope) => void }) {
+	return (
+		<div className="flex items-center gap-1 rounded-lg border border-border bg-surface p-0.5">
+			{(['mine', 'all'] as const).map((s) => (
+				<button
+					key={s}
+					onClick={() => onChange(s)}
+					className={cx('rounded-md px-3 py-1.5 text-[13px] font-medium transition-colors', scope === s ? 'bg-surface-2 text-fg ring-1 ring-border' : 'text-muted hover:text-fg')}
+				>
+					{s === 'mine' ? 'My links' : 'All users'}
+				</button>
+			))}
+		</div>
 	);
 }
 

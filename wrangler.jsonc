@@ -13,6 +13,9 @@
 	"vars": {
 		"ALLOWED_ORIGINS": "*",
 		"SHORT_DOMAIN": "https://short.procd.cc",
+		"GITHUB_CLIENT_ID": "Iv23licS4cbEXkarfhax",
+		"ADMIN_GITHUB_LOGIN": "belphegor-s",
+		"ADMIN_GITHUB_EMAIL": "ayush2162002@gmail.com",
 	},
 	"d1_databases": [
 		{

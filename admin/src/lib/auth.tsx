@@ -1,10 +1,11 @@
 import { createContext, useContext, useEffect, useState, type ReactNode } from 'react';
-import { api, setCsrf, ApiError } from './api';
+import { api, setCsrf, ApiError, type User } from './api';
 
 interface AuthState {
 	status: 'loading' | 'authed' | 'guest';
-	user: string | null;
-	login: (username: string, password: string) => Promise<void>;
+	user: User | null;
+	/** Kick off the GitHub OAuth flow, returning to the dashboard afterwards. */
+	signIn: () => void;
 	logout: () => Promise<void>;
 }
 
@@ -12,7 +13,7 @@ const AuthContext = createContext<AuthState | null>(null);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
 	const [status, setStatus] = useState<AuthState['status']>('loading');
-	const [user, setUser] = useState<string | null>(null);
+	const [user, setUser] = useState<User | null>(null);
 
 	useEffect(() => {
 		api
@@ -28,11 +29,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 			});
 	}, []);
 
-	const login = async (username: string, password: string) => {
-		const me = await api.login(username, password);
-		setCsrf(me.csrf);
-		setUser(me.user);
-		setStatus('authed');
+	const signIn = () => {
+		window.location.href = '/auth/github?next=' + encodeURIComponent('/dashboard');
 	};
 
 	const logout = async () => {
@@ -42,7 +40,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 		setStatus('guest');
 	};
 
-	return <AuthContext.Provider value={{ status, user, login, logout }}>{children}</AuthContext.Provider>;
+	return <AuthContext.Provider value={{ status, user, signIn, logout }}>{children}</AuthContext.Provider>;
 }
 
 export function useAuth(): AuthState {

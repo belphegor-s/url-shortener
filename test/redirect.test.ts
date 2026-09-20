@@ -1,13 +1,20 @@
 import { env, createExecutionContext, waitOnExecutionContext } from 'cloudflare:test';
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, beforeAll } from 'vitest';
 import worker from '../src/index';
+import { seedUser, seedApiKey } from './helpers';
+
+let bearer = '';
+beforeAll(async () => {
+	const user = await seedUser();
+	bearer = `Bearer ${await seedApiKey(user.id)}`;
+});
 
 const create = async (body: unknown): Promise<string> => {
 	const ctx = createExecutionContext();
 	const res = await worker.fetch(
 		new Request('https://short.test/create', {
 			method: 'POST',
-			headers: { 'content-type': 'application/json' },
+			headers: { 'content-type': 'application/json', authorization: bearer },
 			body: JSON.stringify(body),
 		}),
 		env,

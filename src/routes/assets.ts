@@ -5,15 +5,15 @@ import type { AppEnv } from '../types';
 export const dashboard = new Hono<AppEnv>();
 
 /**
- * Serve the built React dashboard (Vite base `/admin/`) from the ASSETS binding.
+ * Serve the built dashboard SPA (Vite base `/dashboard/`) from the ASSETS binding.
  *
  * The app is built flat into dist-admin (index.html + assets/), so we strip the
- * `/admin` prefix before asking the binding, and fall back to index.html for
+ * `/dashboard` prefix before asking the binding, and fall back to index.html for
  * client-side routes (SPA). Real files (JS/CSS) resolve directly.
  */
 async function serve(c: Context<AppEnv>) {
 	const url = new URL(c.req.url);
-	const assetPath = url.pathname.replace(/^\/admin/, '') || '/';
+	const assetPath = url.pathname.replace(/^\/dashboard/, '') || '/';
 	const origin = url.origin;
 
 	let res = await c.env.ASSETS.fetch(new Request(`${origin}${assetPath}`, c.req.raw));
@@ -24,5 +24,5 @@ async function serve(c: Context<AppEnv>) {
 	return res;
 }
 
-dashboard.get('/admin', serve);
-dashboard.get('/admin/*', serve);
+dashboard.get('/dashboard', serve);
+dashboard.get('/dashboard/*', serve);

@@ -20,10 +20,11 @@ const isConstraintError = (err: unknown): boolean => /UNIQUE|constraint/i.test(S
 
 /**
  * Shared link-creation logic: validation, dedup, expiry, collision-safe insert.
- * Pure of HTTP concerns so both the public POST /create route and the admin API can reuse it.
+ * Pure of HTTP concerns so both the public POST /create route and the dashboard API can reuse it.
+ * `userId` scopes dedup to the owner; pass null for server-to-server (API key) creations.
  * Callers should warm KV with the returned {id, url, expiresAt} via waitUntil.
  */
-export async function createLink(env: Bindings, input: CreateInput): Promise<CreateResult> {
+export async function createLink(env: Bindings, input: CreateInput, userId: string | null = null): Promise<CreateResult> {
 	const url = input.url;
 	if (typeof url !== 'string' || !isValidUrl(url)) {
 		return { ok: false, status: 400, code: 'invalid_url', error: 'Missing or invalid url (must be http/https)' };
@@ -44,18 +45,20 @@ export async function createLink(env: Bindings, input: CreateInput): Promise<Cre
 		const exists = await env.DB.prepare(`SELECT 1 FROM urls WHERE id = ?`).bind(customId).first();
 		if (exists) return { ok: false, status: 409, code: 'custom_id_taken', error: 'Custom ID already in use' };
 
-		await insert(env, customId, url, expiresIso);
+		await insert(env, customId, url, expiresIso, userId);
 		return { ok: true, id: customId, url, existing: false, expiresAt };
 	}
 
-	// Auto id: dedup, then collision-safe insert.
-	const dup = await env.DB.prepare(`SELECT id FROM urls WHERE original_url = ?`).bind(url).first<{ id: string }>();
+	// Auto id: dedup within the owner's namespace, then collision-safe insert.
+	const dup = await env.DB.prepare(`SELECT id FROM urls WHERE original_url = ? AND user_id IS ?`)
+		.bind(url, userId)
+		.first<{ id: string }>();
 	if (dup) return { ok: true, id: dup.id, url, existing: true, expiresAt: null };
 
 	for (let attempt = 0; attempt < MAX_ID_RETRIES; attempt++) {
 		const id = nanoid();
 		try {
-			await insert(env, id, url, expiresIso);
+			await insert(env, id, url, expiresIso, userId);
 			return { ok: true, id, url, existing: false, expiresAt };
 		} catch (err) {
 			if (isConstraintError(err)) continue;
@@ -66,5 +69,7 @@ export async function createLink(env: Bindings, input: CreateInput): Promise<Cre
 	return { ok: false, status: 500, code: 'id_exhausted', error: 'Could not allocate a unique id, please retry' };
 }
 
-const insert = (env: Bindings, id: string, url: string, expiresIso: string | null) =>
-	env.DB.prepare(`INSERT INTO urls (id, original_url, expires_at, active) VALUES (?, ?, ?, 1)`).bind(id, url, expiresIso).run();
+const insert = (env: Bindings, id: string, url: string, expiresIso: string | null, userId: string | null) =>
+	env.DB.prepare(`INSERT INTO urls (id, original_url, expires_at, active, user_id) VALUES (?, ?, ?, 1, ?)`)
+		.bind(id, url, expiresIso, userId)
+		.run();

@@ -1,19 +1,24 @@
 export type Bindings = {
-	/** D1 database holding urls + analytics. */
+	/** D1 database holding users + urls + analytics. */
 	DB: D1Database;
-	/** Static bearer token guarding the analytics endpoints. */
-	API_KEY: string;
 	/** Read-through cache for short-code -> link lookups (hot redirect path). */
 	LINKS_KV: KVNamespace;
 	/** Rate limit binding applied to POST /create. */
 	CREATE_LIMITER: RateLimiter;
-	/** Rate limit binding applied to admin login (brute-force guard). */
+	/** Rate limit binding applied to auth start (brute-force guard). */
 	LOGIN_LIMITER: RateLimiter;
-	/** Static assets binding serving the built admin dashboard (dist-admin). */
+	/** Static assets binding serving the built dashboard. */
 	ASSETS: Fetcher;
-	/** Admin dashboard credentials (set via `wrangler secret put`). */
-	ADMIN_USERNAME: string;
-	ADMIN_PASSWORD: string;
+
+	/** GitHub OAuth app credentials. `GITHUB_CLIENT_ID` is public; the secret is a secret. */
+	GITHUB_CLIENT_ID: string;
+	GITHUB_CLIENT_SECRET: string;
+
+	/** GitHub login(s) that are granted the platform-admin role on sign-in. Comma-separated. */
+	ADMIN_GITHUB_LOGIN?: string;
+	/** GitHub email(s) that are granted the platform-admin role on sign-in. Comma-separated. */
+	ADMIN_GITHUB_EMAIL?: string;
+
 	/** Comma-separated list of allowed CORS origins. Use "*" to allow any. */
 	ALLOWED_ORIGINS?: string;
 	/** Public origin used to build short URLs (e.g. https://short.procd.cc). Falls back to request origin. */
@@ -35,11 +40,40 @@ export interface CachedLink {
 	a: boolean;
 }
 
+/** A GitHub-backed account. */
+export interface User {
+	id: string;
+	githubId: string;
+	login: string;
+	name: string | null;
+	email: string | null;
+	avatarUrl: string | null;
+	role: 'user' | 'admin';
+}
+
+/** Raw `users` row. */
+export interface UserRow {
+	id: string;
+	github_id: string;
+	login: string;
+	name: string | null;
+	email: string | null;
+	avatar_url: string | null;
+	role: string;
+	created_at: number;
+	last_login: number;
+}
+
 /** Variables attached to the Hono context by middleware. */
 export type Variables = {
-	/** Present after the admin-auth middleware authenticates a request. */
+	/** Present after the auth middleware authenticates a request. */
 	sessionId: string;
+	/** Synchronizer CSRF token bound to the session. */
 	csrf: string;
+	/** Authenticated user (set by the session or API-key guard). */
+	user: User;
+	/** Present when the request authenticated via a per-account API key. */
+	apiKeyId?: string;
 };
 
 /** Hono environment type used across routes. */

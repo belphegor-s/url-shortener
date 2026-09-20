@@ -1,7 +1,7 @@
 // Tiny typed fetch client for the admin API. Same-origin; the session lives in an
 // HttpOnly cookie, and a synchronizer CSRF token is echoed on mutating requests.
 
-const BASE = '/api/admin';
+const BASE = '/api';
 
 let csrfToken: string | null = null;
 export const setCsrf = (token: string | null) => {
@@ -45,16 +45,41 @@ async function request<T>(path: string, options: { method?: string; body?: unkno
 }
 
 // ---- Types ----
+export interface User {
+	id: string;
+	githubId: string;
+	login: string;
+	name: string | null;
+	email: string | null;
+	avatarUrl: string | null;
+	role: 'user' | 'admin';
+}
 export interface Me {
-	user: string;
+	user: User;
 	csrf: string;
 }
+export type Scope = 'mine' | 'all';
 export interface Overview {
+	scope: Scope;
 	totals: { links: number; active_links: number; clicks: number; clicks_24h: number; clicks_7d: number };
 	series: { day: string; clicks: number }[];
 	top_links: { id: string; original_url: string; clicks: number }[];
 	top_countries: { country_code: string; clicks: number }[];
 	top_referrers: { referrer: string; clicks: number }[];
+}
+export interface AdminUser {
+	id: string;
+	github_id: string;
+	login: string;
+	name: string | null;
+	email: string | null;
+	avatar_url: string | null;
+	role: string;
+	created_at: number;
+	last_login: number;
+	links: number;
+	active_links: number;
+	clicks: number;
 }
 export interface LinkRow {
 	id: string;
@@ -62,10 +87,13 @@ export interface LinkRow {
 	created_at: string;
 	expires_at: string | null;
 	active: number;
+	user_id?: string | null;
+	short_url: string;
 	click_count: number;
 	last_clicked: string | null;
 }
 export interface LinksResponse {
+	scope: Scope;
 	page: number;
 	limit: number;
 	total: number;
@@ -89,6 +117,17 @@ export interface LinkDetail {
 	by_referrer: { referrer: string; clicks: number }[];
 	series: { day: string; clicks: number }[];
 }
+export interface ApiKeyRow {
+	id: string;
+	name: string | null;
+	prefix: string;
+	created_at: number;
+	last_used_at: number | null;
+}
+export interface ApiKeyCreated extends ApiKeyRow {
+	/** The raw key — returned exactly once, at creation. */
+	key: string;
+}
 export interface SessionRow {
 	id: string;
 	ip: string | null;
@@ -102,11 +141,10 @@ export interface SessionRow {
 
 // ---- Endpoints ----
 export const api = {
-	login: (username: string, password: string) => request<Me>('/login', { method: 'POST', body: { username, password } }),
 	logout: () => request<{ success: boolean }>('/logout', { method: 'POST' }),
 	me: () => request<Me>('/me'),
-	overview: () => request<Overview>('/overview'),
-	links: (q: { q?: string; page?: number; limit?: number; sort?: string; dir?: string }) => request<LinksResponse>('/links', { query: q }),
+	overview: (scope: Scope = 'mine') => request<Overview>('/overview', { query: { scope } }),
+	links: (q: { q?: string; page?: number; limit?: number; sort?: string; dir?: string; scope?: Scope }) => request<LinksResponse>('/links', { query: q }),
 	createLink: (body: { url: string; custom_id?: string; expires_in?: number }) =>
 		request<{ short_url: string; id: string; existing: boolean }>('/links', { method: 'POST', body }),
 	updateLink: (id: string, body: { active?: boolean; expires_at?: string | null }) =>
@@ -116,4 +154,8 @@ export const api = {
 		request<LinkDetail>(`/links/${encodeURIComponent(id)}`, { query: q }),
 	sessions: () => request<{ data: SessionRow[] }>('/sessions'),
 	revokeSession: (id: string) => request<{ success: boolean }>(`/sessions/${encodeURIComponent(id)}`, { method: 'DELETE' }),
+	keys: () => request<{ data: ApiKeyRow[] }>('/keys'),
+	createKey: (name?: string) => request<ApiKeyCreated>('/keys', { method: 'POST', body: { name } }),
+	revokeKey: (id: string) => request<{ success: boolean }>(`/keys/${encodeURIComponent(id)}`, { method: 'DELETE' }),
+	users: () => request<{ data: AdminUser[] }>('/users'),
 };

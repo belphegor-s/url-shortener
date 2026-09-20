@@ -15,18 +15,21 @@
 		"test": "vitest run",
 		"test:watch": "vitest",
 		"migrate:local": "wrangler d1 migrations apply url_shortener_db --local",
-		"migrate": "wrangler d1 migrations apply url_shortener_db --remote"
+		"migrate": "wrangler d1 migrations apply url_shortener_db --remote",
+		"assets": "node scripts/generate-assets.mjs"
 	},
 	"devDependencies": {
 		"@cloudflare/vitest-pool-workers": "0.8.71",
 		"@types/node": "^25.9.3",
+		"sharp": "^0.33.5",
 		"typescript": "5.8.3",
 		"vitest": "3.0.9",
 		"wrangler": "4.100.0"
 	},
 	"dependencies": {
-		"@hono/swagger-ui": "0.5.1",
-		"hono": "4.7.8",
-		"nanoid": "5.1.5"
+		"@hono/swagger-ui": "^0.6.1",
+		"hono": "^4.13.8",
+		"nanoid": "^5.1.16",
+		"workers-og": "^0.0.27"
 	}
 }

@@ -3,8 +3,10 @@ import type { SwaggerUIOptions } from '@hono/swagger-ui';
 export const spec: SwaggerUIOptions['spec'] = {
 	openapi: '3.1.0',
 	info: {
-		title: 'URL Shortener API',
+		title: 'SHRT API',
 		version: '1.0.0',
+		description:
+			'Create short links and query their analytics. `/create` accepts either a signed-in session cookie or an account API key (create one in the dashboard). Every request is scoped to the authenticated account; admins may pass `?scope=all`.',
 	},
 	paths: {
 		'/create': {
@@ -239,6 +241,7 @@ export const spec: SwaggerUIOptions['spec'] = {
 			bearerAuth: {
 				type: 'http',
 				scheme: 'bearer',
+				description: 'A per-account API key created from the dashboard (API keys → New key).',
 			},
 		},
 	},

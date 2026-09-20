@@ -1,13 +1,15 @@
 import { useEffect, useState, type FormEvent } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient, keepPreviousData } from '@tanstack/react-query';
-import { api, ApiError, type LinkRow } from '../lib/api';
+import { api, ApiError, type LinkRow, type Scope } from '../lib/api';
+import { useAuth } from '../lib/auth';
 import { PageHeader } from '../components/Layout';
 import { motion } from 'motion/react';
 import { Button, Card, Input, Badge, Checkbox, CopyButton, Spinner, EmptyState, ConfirmDialog, cx } from '../components/ui';
 import { Modal } from '../components/Modal';
 import { IconSearch, IconPlus, IconTrash, IconLink, IconExternal, IconChevron, IconX, IconPower } from '../components/icons';
 import { full, fmtDate, relative, hostOf } from '../lib/format';
+import { ScopeToggle } from './Overview';
 
 function useDebounced<T>(value: T, ms = 300): T {
 	const [v, setV] = useState(value);
@@ -27,20 +29,35 @@ const SORTS = [
 export default function Links() {
 	const qc = useQueryClient();
 	const navigate = useNavigate();
+	const { user } = useAuth();
+	const [params, setParams] = useSearchParams();
 	const [search, setSearch] = useState('');
 	const q = useDebounced(search);
 	const [page, setPage] = useState(1);
 	const [sort, setSort] = useState('created');
+	const [scope, setScope] = useState<Scope>('mine');
 	const [selected, setSelected] = useState<Set<string>>(new Set());
 	const [createOpen, setCreateOpen] = useState(false);
+	const [initialUrl, setInitialUrl] = useState('');
 	const [pendingDelete, setPendingDelete] = useState<string[] | null>(null);
 	const limit = 20;
 
-	useEffect(() => setPage(1), [q, sort]);
+	useEffect(() => setPage(1), [q, sort, scope]);
+
+	// Prefill the create dialog when arriving from the landing page (?new=<url>).
+	useEffect(() => {
+		const next = params.get('new');
+		if (!next) return;
+		setInitialUrl(next);
+		setCreateOpen(true);
+		const copy = new URLSearchParams(params);
+		copy.delete('new');
+		setParams(copy, { replace: true });
+	}, [params, setParams]);
 
 	const { data, isFetching } = useQuery({
-		queryKey: ['links', q, page, sort],
-		queryFn: () => api.links({ q, page, limit, sort, dir: 'desc' }),
+		queryKey: ['links', q, page, sort, scope],
+		queryFn: () => api.links({ q, page, limit, sort, dir: 'desc', scope }),
 		placeholderData: keepPreviousData,
 	});
 
@@ -78,11 +95,14 @@ export default function Links() {
 		<div>
 			<PageHeader
 				title="Links"
-				subtitle={data ? `${full(data.total)} total` : ' '}
+				subtitle={data ? `${full(data.total)} ${scope === 'all' ? 'across all accounts' : 'total'}` : ' '}
 				action={
-					<Button variant="primary" onClick={() => setCreateOpen(true)}>
-						<IconPlus className="size-4" /> New link
-					</Button>
+					<div className="flex items-center gap-2">
+						{user?.role === 'admin' && <ScopeToggle scope={scope} onChange={setScope} />}
+						<Button variant="primary" onClick={() => { setInitialUrl(''); setCreateOpen(true); }}>
+							<IconPlus className="size-4" /> New link
+						</Button>
+					</div>
 				}
 			/>
 
@@ -173,7 +193,7 @@ export default function Links() {
 				</div>
 			)}
 
-			<CreateDialog open={createOpen} onClose={() => setCreateOpen(false)} onCreated={invalidate} />
+			<CreateDialog open={createOpen} initialUrl={initialUrl} onClose={() => setCreateOpen(false)} onCreated={invalidate} />
 
 			<ConfirmDialog
 				open={pendingDelete !== null}
@@ -222,7 +242,7 @@ function Row({
 			<div className="min-w-0">
 				<div className="flex items-center gap-1.5">
 					<span className="font-mono text-[13px] font-medium text-fg">/{row.id}</span>
-					<CopyButton value={`${location.origin}/${row.id}`} />
+					<CopyButton value={row.short_url} />
 				</div>
 				<div className="mt-0.5 flex items-center gap-1 truncate text-[12px] text-muted">
 					<IconExternal className="size-3 shrink-0 text-faint" />
@@ -249,23 +269,23 @@ function Row({
 	);
 }
 
-function CreateDialog({ open, onClose, onCreated }: { open: boolean; onClose: () => void; onCreated: () => void }) {
+function CreateDialog({ open, initialUrl = '', onClose, onCreated }: { open: boolean; initialUrl?: string; onClose: () => void; onCreated: () => void }) {
 	const [url, setUrl] = useState('');
 	const [customId, setCustomId] = useState('');
 	const [expiresDays, setExpiresDays] = useState('');
 	const [result, setResult] = useState<{ short_url: string } | null>(null);
 	const [error, setError] = useState<string | null>(null);
 
-	// Reset the form each time the dialog opens.
+	// Reset the form each time the dialog opens (prefilled from ?new=<url> when present).
 	useEffect(() => {
 		if (open) {
-			setUrl('');
+			setUrl(initialUrl);
 			setCustomId('');
 			setExpiresDays('');
 			setResult(null);
 			setError(null);
 		}
-	}, [open]);
+	}, [open, initialUrl]);
 
 	const create = useMutation({
 		mutationFn: () =>

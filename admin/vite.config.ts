@@ -2,10 +2,10 @@ import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import tailwindcss from '@tailwindcss/vite';
 
-// Dashboard is served by the Worker under /admin, so all assets are prefixed.
+// Dashboard is served by the Worker under /dashboard, so all assets are prefixed.
 // Output goes to ../dist-admin, which the Worker exposes via the ASSETS binding.
 export default defineConfig({
-	base: '/admin/',
+	base: '/dashboard/',
 	plugins: [react(), tailwindcss()],
 	build: {
 		outDir: '../dist-admin',
@@ -31,6 +31,7 @@ export default defineConfig({
 		// Proxy API + public endpoints to the local Worker during `npm run dev`.
 		proxy: {
 			'/api': 'http://localhost:8787',
+			'/auth': 'http://localhost:8787',
 			'/create': 'http://localhost:8787',
 			'/analytics': 'http://localhost:8787',
 		},
