@@ -20,6 +20,7 @@ export type IconName =
 	| 'menu'
 	| 'close'
 	| 'book'
+	| 'braces'
 	| 'layers';
 
 const PATHS: Record<IconName, string> = {
@@ -44,6 +45,7 @@ const PATHS: Record<IconName, string> = {
 	terminal: '<rect x="2.5" y="4" width="19" height="16" rx="2"/><path d="m7 9 3 3-3 3M13 15h4"/>',
 	menu: '<path d="M4 7h16M4 12h16M4 17h16"/>',
 	close: '<path d="M6 6l12 12M18 6 6 18"/>',
+	braces: '<path d="M8 3H7a2 2 0 0 0-2 2v4a2 2 0 0 1-2 2 2 2 0 0 1 2 2v4a2 2 0 0 0 2 2h1"/><path d="M16 3h1a2 2 0 0 1 2 2v4a2 2 0 0 0 2 2 2 2 0 0 0-2 2v4a2 2 0 0 1-2 2h-1"/>',
 	book: '<path d="M4 4.5A2.5 2.5 0 0 1 6.5 2H20v18H6.5A2.5 2.5 0 0 0 4 22z"/><path d="M4 17.5A2.5 2.5 0 0 1 6.5 15H20"/>',
 	layers: '<path d="m12 3 9 5-9 5-9-5 9-5z"/><path d="m3 13 9 5 9-5"/>',
 };

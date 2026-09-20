@@ -162,12 +162,12 @@
 		-webkit-backdrop-filter: blur(12px);
 	}
 
-	/* Brand mark, identical to the public site. */
+	/* Brand mark, identical to the public site: ink on paper, inverted in dark. */
 	.mark {
 		display: grid;
 		place-items: center;
-		color: #ffffff;
-		background: linear-gradient(135deg, #7c5cff, #34d3ee);
+		background: var(--color-fg);
+		color: var(--color-bg);
 	}
 
 	/* Blueprint chrome: dashed structural lines and the crosshair that marks a

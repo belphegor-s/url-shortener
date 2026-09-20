@@ -1,10 +1,9 @@
 import { Suspense, useState } from 'react';
 import { NavLink, Outlet, useLocation } from 'react-router-dom';
-import { AnimatePresence, motion } from 'motion/react';
+import { AnimatePresence, LayoutGroup, motion } from 'motion/react';
 import { useAuth } from '../lib/auth';
 import { useTheme } from '../lib/theme';
-import { Badge, Skeleton, SkeletonRows, SkeletonStats, Skeletons, cx } from './ui';
-import { Button } from './ui';
+import { Button, Skeleton, SkeletonRows, SkeletonStats, Skeletons, SlidingIndicator, cx } from './ui';
 import { IconChart, IconLink, IconUsers, IconKey, IconLogout, IconMenu, IconX, IconSun, IconMoon, IconHome } from './icons';
 
 const NAV = [
@@ -16,45 +15,40 @@ const NAV = [
 
 const ADMIN_NAV = [{ to: '/users', label: 'Users', icon: IconUsers, end: false }];
 
+const ROW = 'flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm font-medium transition-colors';
+
 function NavItems({ onNavigate, indicatorId, admin }: { onNavigate?: () => void; indicatorId: string; admin: boolean }) {
 	const items = admin ? [...NAV, ...ADMIN_NAV] : NAV;
 	return (
-		<nav className="flex flex-col gap-1">
-			{items.map(({ to, label, icon: Icon, end }) => (
-				<NavLink
-					key={to}
-					to={to}
-					end={end}
-					onClick={onNavigate}
-					className={({ isActive }) =>
-						cx(
-							'relative flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm font-medium transition-colors',
-							isActive ? 'text-fg' : 'text-muted hover:bg-surface-2/60 hover:text-fg'
-						)
-					}
-				>
-					{({ isActive }) => (
-						<>
-							{isActive && (
-								<motion.span
-									layoutId={indicatorId}
-									className="absolute inset-0 rounded-lg bg-surface-2 ring-1 ring-border"
-									transition={{ type: 'spring', stiffness: 380, damping: 32 }}
-								/>
-							)}
-							<Icon className="relative z-10 size-[18px]" />
-							<span className="relative z-10">{label}</span>
-						</>
-					)}
-				</NavLink>
-			))}
-		</nav>
+		// Scoped so the desktop sidebar and the mobile drawer never share an indicator
+		// even while both are mounted.
+		<LayoutGroup id={indicatorId}>
+			<nav className="flex flex-col gap-1">
+				{items.map(({ to, label, icon: Icon, end }) => (
+					<NavLink
+						key={to}
+						to={to}
+						end={end}
+						onClick={onNavigate}
+						className={({ isActive }) => cx('relative', ROW, isActive ? 'text-fg' : 'text-muted hover:bg-surface-2/60 hover:text-fg')}
+					>
+						{({ isActive }) => (
+							<>
+								{isActive && <SlidingIndicator layoutId="nav" />}
+								<Icon className="relative z-10 size-[18px]" />
+								<span className="relative z-10">{label}</span>
+							</>
+						)}
+					</NavLink>
+				))}
+			</nav>
+		</LayoutGroup>
 	);
 }
 
 function Brand() {
 	return (
-		<div className="flex items-center gap-2.5 px-3">
+		<div className="flex items-center gap-2.5 px-4">
 			<div className="mark size-7 rounded-lg">
 				<IconLink className="size-4" />
 			</div>
@@ -66,14 +60,23 @@ function Brand() {
 	);
 }
 
-function ThemeToggle({ className }: { className?: string }) {
+function BackToSite() {
+	return (
+		<a href="/" className={cx(ROW, 'text-muted hover:bg-surface-2/60 hover:text-fg')}>
+			<IconHome className="size-[18px]" />
+			Back to site
+		</a>
+	);
+}
+
+function ThemeToggle() {
 	const [theme, toggle] = useTheme();
 	return (
 		<button
 			onClick={toggle}
 			title="Toggle theme"
 			aria-label="Toggle theme"
-			className={cx('grid size-8 shrink-0 place-items-center rounded-lg text-faint transition hover:bg-surface-2 hover:text-fg', className)}
+			className="grid size-8 shrink-0 place-items-center rounded-lg text-faint transition hover:bg-surface-2 hover:text-fg"
 		>
 			{theme === 'dark' ? <IconSun className="size-[18px]" /> : <IconMoon className="size-[18px]" />}
 		</button>
@@ -89,44 +92,56 @@ export default function Layout() {
 	const title = nav.find((n) => (n.end ? loc.pathname === n.to : loc.pathname.startsWith(n.to) && n.to !== '/'))?.label ?? 'Overview';
 
 	const identity = (
-		<div className="flex min-w-0 items-center gap-2">
+		<div className="flex min-w-0 items-center gap-2.5">
 			{user?.avatarUrl ? (
-				<img src={user.avatarUrl} alt="" width={28} height={28} className="size-7 rounded-full border border-border" referrerPolicy="no-referrer" />
+				<img src={user.avatarUrl} alt="" width={28} height={28} className="size-7 shrink-0 rounded-full border border-border" referrerPolicy="no-referrer" />
 			) : (
-				<div className="grid size-7 place-items-center rounded-full bg-surface-2 text-xs font-semibold text-muted">{user?.login?.[0]?.toUpperCase() ?? '?'}</div>
+				<div className="grid size-7 shrink-0 place-items-center rounded-full bg-surface-2 text-xs font-semibold text-muted">
+					{user?.login?.[0]?.toUpperCase() ?? '?'}
+				</div>
 			)}
 			<div className="min-w-0 leading-tight">
-				<div className="flex items-center gap-1.5">
-					<span className="truncate text-sm text-fg">{user?.name || user?.login}</span>
-					{admin && <Badge tone="accent">admin</Badge>}
-				</div>
+				<div className="truncate text-sm text-fg">{user?.name || user?.login}</div>
 				<div className="truncate text-[11px] text-faint">@{user?.login}</div>
+			</div>
+		</div>
+	);
+
+	/** Nav list, a dashed break, then the way back out to the marketing site. */
+	const navBlock = (indicatorId: string, onNavigate?: () => void) => (
+		<div className="px-3">
+			<NavItems indicatorId={indicatorId} admin={admin} onNavigate={onNavigate} />
+			<div className="my-3 border-t border-dashed border-border" />
+			<BackToSite />
+		</div>
+	);
+
+	const accountBlock = (
+		<div className="border-t border-dashed border-border px-4 pt-3.5">
+			<div className="flex items-center justify-between gap-2">
+				{identity}
+				<div className="flex shrink-0 items-center">
+					<ThemeToggle />
+					<button
+						onClick={logout}
+						title="Sign out"
+						aria-label="Sign out"
+						className="grid size-8 shrink-0 place-items-center rounded-lg text-faint transition hover:bg-surface-2 hover:text-danger"
+					>
+						<IconLogout className="size-[18px]" />
+					</button>
+				</div>
 			</div>
 		</div>
 	);
 
 	return (
 		<div className="min-h-dvh">
-			{/* Desktop sidebar. The dashed right edge is the blueprint rail the content sits against. */}
+			{/* Desktop sidebar. Its dashed right edge is the rail the content sits against. */}
 			<aside className="fixed inset-y-0 left-0 hidden w-60 flex-col border-r border-dashed border-border bg-surface/40 py-5 lg:flex">
 				<Brand />
-				<div className="mt-7 px-3">
-					<NavItems indicatorId="nav-desktop" admin={admin} />
-				</div>
-				<div className="mt-auto border-t border-dashed border-border px-4 pt-4">
-					<div className="flex items-center justify-between gap-2">
-						{identity}
-						<div className="flex shrink-0 items-center">
-							<ThemeToggle />
-							<button onClick={logout} title="Sign out" className="grid size-8 shrink-0 place-items-center rounded-lg text-faint transition hover:bg-surface-2 hover:text-danger">
-								<IconLogout className="size-[18px]" />
-							</button>
-						</div>
-					</div>
-					<a href="/" className="mt-3 flex items-center gap-2 rounded-lg px-1 py-1.5 text-[12px] text-faint transition hover:text-fg">
-						<IconHome className="size-3.5" /> Back to site
-					</a>
-				</div>
+				<div className="mt-7">{navBlock('nav-desktop')}</div>
+				<div className="mt-auto pt-4">{accountBlock}</div>
 			</aside>
 
 			{/* Mobile top bar */}
@@ -147,22 +162,15 @@ export default function Layout() {
 			{open && (
 				<div className="fixed inset-0 z-40 lg:hidden">
 					<div className="absolute inset-0 bg-black/60" onClick={() => setOpen(false)} />
-					<div className="animate-in absolute inset-y-0 left-0 w-64 border-r border-dashed border-border bg-bg py-5">
+					<div className="animate-in absolute inset-y-0 left-0 flex w-64 flex-col border-r border-dashed border-border bg-bg py-5">
 						<div className="flex items-center justify-between pr-3">
 							<Brand />
 							<button onClick={() => setOpen(false)} aria-label="Close menu" className="grid size-9 place-items-center rounded-lg text-muted hover:bg-surface-2">
 								<IconX className="size-5" />
 							</button>
 						</div>
-						<div className="mt-7 px-3">
-							<NavItems onNavigate={() => setOpen(false)} indicatorId="nav-mobile" admin={admin} />
-						</div>
-						<div className="mt-6 border-t border-dashed border-border px-4 pt-4">
-							{identity}
-							<a href="/" className="mt-3 flex items-center gap-2 rounded-lg px-1 py-1.5 text-[12px] text-faint transition hover:text-fg">
-								<IconHome className="size-3.5" /> Back to site
-							</a>
-						</div>
+						<div className="mt-7">{navBlock('nav-mobile', () => setOpen(false))}</div>
+						<div className="mt-auto pt-4">{accountBlock}</div>
 					</div>
 				</div>
 			)}

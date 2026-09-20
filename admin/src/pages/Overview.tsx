@@ -3,7 +3,7 @@ import { useQuery } from '@tanstack/react-query';
 import { api, type Scope } from '../lib/api';
 import { useAuth } from '../lib/auth';
 import { PageHeader } from '../components/Layout';
-import { Card, Skeleton, SkeletonChart, SkeletonStats, Skeletons, EmptyState, cx } from '../components/ui';
+import { Card, Segmented, Skeleton, SkeletonChart, SkeletonStats, Skeletons, EmptyState } from '../components/ui';
 import { TrendChart, BarList } from '../components/charts';
 import { compact, full, hostOf } from '../lib/format';
 import { Flag } from '../components/Flag';
@@ -88,17 +88,15 @@ function Panel({ title, children, empty, emptyIcon }: { title: string; children:
 
 export function ScopeToggle({ scope, onChange }: { scope: Scope; onChange: (s: Scope) => void }) {
 	return (
-		<div className="flex items-center gap-1 rounded-lg border border-border bg-surface p-0.5">
-			{(['mine', 'all'] as const).map((s) => (
-				<button
-					key={s}
-					onClick={() => onChange(s)}
-					className={cx('rounded-md px-3 py-1.5 text-[13px] font-medium transition-colors', scope === s ? 'bg-surface-2 text-fg ring-1 ring-border' : 'text-muted hover:text-fg')}
-				>
-					{s === 'mine' ? 'My links' : 'All users'}
-				</button>
-			))}
-		</div>
+		<Segmented
+			layoutId="scope"
+			value={scope}
+			onChange={onChange}
+			options={[
+				{ value: 'mine', label: 'My links' },
+				{ value: 'all', label: 'All users' },
+			]}
+		/>
 	);
 }
 

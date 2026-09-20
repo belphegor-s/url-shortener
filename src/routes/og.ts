@@ -24,9 +24,8 @@ og.get('/og.png', async (c) => {
 		const card =
 			'<div style="display:flex;flex-direction:column;width:1200px;height:630px;background-color:#09090b;position:relative;overflow:hidden;padding:80px;font-family:Inter;">' +
 			'<div style="display:flex;position:absolute;top:0;left:0;width:1200px;height:630px;background-image:linear-gradient(90deg,rgba(250,250,250,0.05) 1px,transparent 1px),linear-gradient(180deg,rgba(250,250,250,0.05) 1px,transparent 1px);background-size:56px 56px;"></div>' +
-			'<div style="display:flex;position:absolute;top:-220px;left:-160px;width:700px;height:700px;border-radius:9999px;background-image:linear-gradient(135deg, rgba(124,92,255,0.34), rgba(9,9,11,0));"></div>' +
 			'<div style="display:flex;align-items:center;position:relative;">' +
-			'<div style="display:flex;align-items:center;justify-content:center;width:56px;height:56px;border-radius:16px;background-image:linear-gradient(135deg,#7c5cff,#34d3ee);color:#ffffff;font-size:32px;font-weight:700;">S</div>' +
+			'<div style="display:flex;align-items:center;justify-content:center;width:56px;height:56px;border-radius:16px;background-color:#fafafa;color:#09090b;font-size:32px;font-weight:700;">S</div>' +
 			'<div style="display:flex;margin-left:16px;font-size:30px;font-weight:700;color:#fafafa;letter-spacing:-0.5px;">SHRT</div>' +
 			'</div>' +
 			'<div style="display:flex;flex-direction:column;margin-top:auto;position:relative;">' +

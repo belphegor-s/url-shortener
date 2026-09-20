@@ -1,4 +1,6 @@
 import { esc, renderPage, REPO_URL, type NavLink } from './chrome';
+import { CREDIT } from './webgl';
+import { highlight } from './highlight';
 import { icon, type IconName } from './icons';
 
 export interface LandingOptions {
@@ -48,6 +50,7 @@ export function renderLanding(o: LandingOptions): string {
 
 	const content = `<main>
   <section class="container hero rule">
+    <canvas id="hero-gl" class="hero-gl" title="${esc(CREDIT)}" aria-hidden="true"></canvas>
     <span class="badge"><span class="pulse"></span> Open source &middot; Runs on Cloudflare Workers</span>
     <h1>Short links,<br /><span class="dim">long reach.</span></h1>
     <p class="lead">SHRT turns sprawling URLs into crisp, shareable links served from the edge, with per-click analytics that respect the people clicking them.</p>
@@ -173,29 +176,33 @@ const step = (n: number, title: string, body: string): string =>
 	`<div class="step"><div class="n">${n}</div><h3>${title}</h3><p>${body}</p></div>`;
 
 function codeCard(baseUrl: string): string {
-	const snippet =
-		`curl -X POST ${baseUrl}/create \\\n` +
-		`  -H "Authorization: Bearer $SHRT_API_KEY" \\\n` +
-		`  -H "content-type: application/json" \\\n` +
+	const request =
+		`# Create a link with an account API key
+` +
+		`curl -X POST ${baseUrl}/create \
+` +
+		`  -H "Authorization: Bearer $SHRT_API_KEY" \
+` +
+		`  -H "content-type: application/json" \
+` +
 		`  -d '{"url":"https://example.com"}'`;
+
+	const response = `{
+  "short_url": "${baseUrl}/aB3xK9q",
+  "id": "aB3xK9q",
+  "expires_at": null
+}`;
 
 	return `<div class="card code-card">
   <div class="code-head">
     ${icon('terminal', { size: 15 })}
     <span class="name">create-link.sh</span>
-    <button class="btn btn-ghost btn-sm" type="button" data-copy="${esc(snippet)}">${icon('copy', { size: 14 })} <span>Copy</span></button>
+    <span class="lang">bash</span>
+    <button class="btn btn-ghost btn-sm" type="button" data-copy="${esc(request)}">${icon('copy', { size: 14 })} <span>Copy</span></button>
   </div>
-  <pre class="code"><span class="cm"># Create a link with an account API key</span>
-<span class="fn">curl</span> -X POST <span class="st">${esc(baseUrl)}/create</span> \\
-  -H <span class="st">"Authorization: Bearer $SHRT_API_KEY"</span> \\
-  -H <span class="st">"content-type: application/json"</span> \\
-  -d <span class="st">'{"url":"https://example.com"}'</span>
+  <pre class="code">${highlight(request, 'bash')}
 
-<span class="cm"># 201 Created</span>
-{
-  <span class="ky">"short_url"</span>: <span class="st">"${esc(baseUrl)}/aB3xK9q"</span>,
-  <span class="ky">"id"</span>: <span class="st">"aB3xK9q"</span>,
-  <span class="ky">"expires_at"</span>: <span class="ky">null</span>
-}</pre>
+<span class="t-com"># 201 Created</span>
+${highlight(response, 'json')}</pre>
 </div>`;
 }

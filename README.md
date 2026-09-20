@@ -15,7 +15,8 @@
 - **GitHub OAuth.** Passwordless sign-in. Each account gets a private dashboard; links are scoped to their owner.
 - **Server-rendered public site.** Zero-build HTML/CSS in a shadcn-style design system (neutral zinc palette, one radius, light & dark themes), laid out on a blueprint grid: two dashed rails run the height of the page, dashed rules close each band, and crosshairs mark every intersection. Fully responsive down to 320px, with proper meta tags, JSON-LD, and a dynamic PNG OG image (`/og.png`).
 - **One design system, both surfaces.** The React dashboard shares the same tokens, the same light/dark pair and the same `shrt-theme` preference as the marketing site, so a theme chosen on either carries to the other. Every loading state is a skeleton shaped like the content it replaces, not a spinner.
-- **Hand-built API reference.** `/docs` is rendered by the Worker in the same design system instead of a third-party Swagger bundle, and the raw OpenAPI 3.1 document is served at `/openapi.json`.
+- **Hand-built API reference.** `/docs` is rendered by the Worker in the same design system instead of a third-party Swagger bundle, with server-side syntax highlighting for shell, JSON and raw HTTP, and the raw OpenAPI 3.1 document at `/openapi.json`.
+- **WebGL hero.** Drifting topographic contours built on [webgl-noise](https://github.com/ashima/webgl-noise) (simplex noise by Ian McEwan and Stefan Gustavson, Ashima Arts, MIT). Decorative and defensive: no WebGL, a lost context or a failed compile all leave the page reading exactly as it does without it, and `prefers-reduced-motion` gets a single static frame.
 - **Platform admins.** Accounts listed in `ADMIN_GITHUB_LOGIN` / `ADMIN_GITHUB_EMAIL` get an all-users view and a users directory.
 - **Hardened.** Session cookies (`__Host-` prefix), hashed session tokens, synchronizer CSRF, constant-time auth, rate limiting, single-use OAuth state, and a strict CSP.
 

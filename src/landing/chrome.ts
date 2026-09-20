@@ -1,6 +1,7 @@
 import type { User } from '../types';
 import { icon } from './icons';
 import { styles } from './styles';
+import { NOISE_REPO } from './webgl';
 
 /** Canonical source repository. Surfaced in the header, footer and hero. */
 export const REPO_URL = 'https://github.com/belphegor-s/url-shortener';
@@ -112,6 +113,7 @@ function footerHtml(): string {
         <a href="${esc(REPO_URL)}/issues" target="_blank" rel="noreferrer noopener">Report an issue</a>
         <a href="${esc(REPO_URL)}#setup" target="_blank" rel="noreferrer noopener">Self-host</a>
         <a href="${esc(REPO_URL)}/blob/main/LICENSE.md" target="_blank" rel="noreferrer noopener">MIT license</a>
+        <a href="${esc(NOISE_REPO)}" target="_blank" rel="noreferrer noopener">Noise by Ashima Arts</a>
       </div>
     </div>
   </div>

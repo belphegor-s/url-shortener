@@ -4,8 +4,7 @@ import { useQuery, useMutation, useQueryClient, keepPreviousData } from '@tansta
 import { api, ApiError, type LinkRow, type Scope } from '../lib/api';
 import { useAuth } from '../lib/auth';
 import { PageHeader } from '../components/Layout';
-import { motion } from 'motion/react';
-import { Button, Card, Input, Badge, Checkbox, CopyButton, SkeletonRows, EmptyState, ConfirmDialog, cx } from '../components/ui';
+import { Button, Card, Input, Badge, Checkbox, CopyButton, Segmented, SkeletonRows, EmptyState, ConfirmDialog, cx } from '../components/ui';
 import { Modal } from '../components/Modal';
 import { IconSearch, IconPlus, IconTrash, IconLink, IconExternal, IconChevron, IconX, IconPower } from '../components/icons';
 import { full, fmtDate, relative, hostOf } from '../lib/format';
@@ -20,10 +19,10 @@ function useDebounced<T>(value: T, ms = 300): T {
 	return v;
 }
 
-const SORTS = [
-	{ key: 'created', label: 'Newest' },
-	{ key: 'clicks', label: 'Most clicks' },
-	{ key: 'last', label: 'Last clicked' },
+const SORTS: { value: string; label: string }[] = [
+	{ value: 'created', label: 'Newest' },
+	{ value: 'clicks', label: 'Most clicks' },
+	{ value: 'last', label: 'Last clicked' },
 ];
 
 export default function Links() {
@@ -112,24 +111,7 @@ export default function Links() {
 					<IconSearch className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-faint" />
 					<Input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search by code or destination…" className="pl-9" />
 				</div>
-				<div className="flex items-center gap-1 rounded-lg border border-border bg-surface p-0.5">
-					{SORTS.map((s) => (
-						<button
-							key={s.key}
-							onClick={() => setSort(s.key)}
-							className={cx('relative rounded-md px-2.5 py-1.5 text-[13px] font-medium transition-colors', sort === s.key ? 'text-fg' : 'text-muted hover:text-fg')}
-						>
-							{sort === s.key && (
-								<motion.span
-									layoutId="sortPill"
-									className="absolute inset-0 rounded-md bg-surface-2 ring-1 ring-border"
-									transition={{ type: 'spring', stiffness: 420, damping: 34 }}
-								/>
-							)}
-							<span className="relative z-10">{s.label}</span>
-						</button>
-					))}
-				</div>
+				<Segmented layoutId="sort" value={sort} onChange={setSort} options={SORTS} />
 			</div>
 
 			{/* Batch action bar */}

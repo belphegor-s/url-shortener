@@ -1,6 +1,7 @@
 import type { User } from '../types';
 import { esc, renderPage, REPO_URL, type NavLink } from './chrome';
 import { docsStyles } from './docs-styles';
+import { highlight, type Lang } from './highlight';
 import { icon } from './icons';
 
 export interface DocsOptions {
@@ -68,7 +69,7 @@ export function renderDocs(o: DocsOptions): string {
     <section id="authentication">
       <h2>Authentication</h2>
       <p>There is no global API key. Create a per-account key in the dashboard under <strong>API keys</strong>, then send it as a bearer token. Keys are scoped to the account that created them and can be revoked at any time.</p>
-      ${codeBlock('authorization', `Authorization: Bearer shrt_live_xxxxxxxxxxxxxxxxxxxx`)}
+      ${codeBlock('authorization', `Authorization: Bearer shrt_live_xxxxxxxxxxxxxxxxxxxx`, 'http')}
       <p>Browser requests from a signed-in session work too: the session cookie authenticates <code>/create</code> and <code>/analytics</code> without a key. Account admins may additionally pass <code>?scope=all</code> to read across every account.</p>
       <div class="card" style="padding:0.875rem 1rem;margin-top:1rem;display:flex;gap:0.625rem;align-items:flex-start">
         <span style="color:var(--muted-foreground);flex:none;margin-top:0.125rem">${icon('lock', { size: 15 })}</span>
@@ -79,7 +80,7 @@ export function renderDocs(o: DocsOptions): string {
     <section id="errors">
       <h2>Errors and limits</h2>
       <p>Errors use conventional HTTP status codes and a consistent body shape.</p>
-      ${codeBlock('error.json', `{\n  "error": "Invalid or missing URL",\n  "code": "bad_request"\n}`)}
+      ${codeBlock('error.json', `{\n  "error": "Invalid or missing URL",\n  "code": "bad_request"\n}`, 'json')}
       ${table(
 				['Status', 'Code', 'Meaning'],
 				[
@@ -121,6 +122,7 @@ export function renderDocs(o: DocsOptions): string {
 			request: `curl -i ${base}/launch`,
 			response: `HTTP/2 302\nlocation: https://example.com/a/very/long/path\ncache-control: private, no-store`,
 			responseLabel: '302 Found',
+			responseLang: 'http',
 			id: 'resolve-link',
 		})}
 
@@ -169,7 +171,7 @@ export function renderDocs(o: DocsOptions): string {
     <section id="openapi">
       <h2>OpenAPI spec</h2>
       <p>The machine-readable description of this API is served as OpenAPI 3.1. Point your client generator, Postman or Insomnia at it directly.</p>
-      ${codeBlock('openapi', `curl ${base}/openapi.json`)}
+      ${codeBlock('openapi', `curl ${base}/openapi.json`, 'bash')}
       <div style="display:flex;flex-wrap:wrap;gap:0.625rem;margin-top:1.25rem">
         <a class="btn btn-outline btn-sm" href="/openapi.json">${icon('code', { size: 15 })} Open the spec</a>
         <a class="btn btn-outline btn-sm" href="${esc(REPO_URL)}" target="_blank" rel="noreferrer noopener">${icon('github', { size: 15, filled: true })} Source on GitHub ${icon('external', { size: 13 })}</a>
@@ -210,6 +212,8 @@ interface EndpointOptions {
 	request: string;
 	response: string;
 	responseLabel: string;
+	/** Response grammar. Every endpoint returns JSON apart from the redirect. */
+	responseLang?: Lang;
 }
 
 function endpoint(e: EndpointOptions): string {
@@ -223,8 +227,8 @@ function endpoint(e: EndpointOptions): string {
         <div class="endpoint-body">
           <p>${e.summary}</p>
           ${e.params ? `<div><h3>${esc(e.paramsTitle ?? 'Body parameters')}</h3>${table(['Field', 'Type', 'Description'], e.params.map(paramRow), '0.625rem')}</div>` : ''}
-          <div><h3>Request</h3>${codeBlock('request', e.request, '0.625rem')}</div>
-          <div><h3>Response &middot; ${esc(e.responseLabel)}</h3>${codeBlock('response', e.response, '0.625rem')}</div>
+          <div><h3>Request</h3>${codeBlock('request', e.request, 'bash', '0.625rem')}</div>
+          <div><h3>Response &middot; ${esc(e.responseLabel)}</h3>${codeBlock('response', e.response, e.responseLang ?? 'json', '0.625rem')}</div>
         </div>
       </div>
     </section>`;
@@ -245,13 +249,15 @@ function table(head: string[], rows: string[][], marginTop = '1rem'): string {
           </div>`;
 }
 
-function codeBlock(name: string, code: string, marginTop = '1rem'): string {
+function codeBlock(name: string, code: string, lang: Lang = 'bash', marginTop = '1rem'): string {
+	const glyph = lang === 'json' ? 'braces' : lang === 'http' ? 'globe' : 'terminal';
 	return `<div class="card code-card" style="margin-top:${marginTop}">
             <div class="code-head">
-              ${icon('terminal', { size: 15 })}
+              ${icon(glyph, { size: 15 })}
               <span class="name">${esc(name)}</span>
+              <span class="lang">${esc(lang)}</span>
               <button class="btn btn-ghost btn-sm" type="button" data-copy="${esc(code)}">${icon('copy', { size: 14 })} <span>Copy</span></button>
             </div>
-            <pre class="code">${esc(code)}</pre>
+            <pre class="code">${highlight(code, lang)}</pre>
           </div>`;
 }

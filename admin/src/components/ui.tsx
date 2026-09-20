@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState, type ButtonHTMLAttributes, type CSSProperties, type InputHTMLAttributes, type ReactNode } from 'react';
+import { motion } from 'motion/react';
 import { IconCopy, IconCheck } from './icons';
 import { Modal } from './Modal';
 
@@ -75,6 +76,54 @@ export function Badge({ children, tone = 'muted' }: { children: ReactNode; tone?
 		<span className={cx('inline-flex shrink-0 items-center gap-1 whitespace-nowrap rounded-md border px-1.5 py-0.5 text-[11px] font-medium', tones[tone])}>
 			{children}
 		</span>
+	);
+}
+
+/** The pill that slides between the selected item of a nav list or a segmented
+ *  control. One implementation so every tab switch in the app moves the same way. */
+export function SlidingIndicator({ layoutId, className }: { layoutId: string; className?: string }) {
+	return (
+		<motion.span
+			layoutId={layoutId}
+			className={cx('absolute inset-0 rounded-lg bg-surface-2 ring-1 ring-border', className)}
+			transition={{ type: 'spring', stiffness: 380, damping: 32 }}
+		/>
+	);
+}
+
+/** Segmented control. The caller owns the value; options are label/value pairs. */
+export function Segmented<T extends string>({
+	value,
+	options,
+	onChange,
+	layoutId,
+}: {
+	value: T;
+	options: { value: T; label: string }[];
+	onChange: (value: T) => void;
+	layoutId: string;
+}) {
+	return (
+		<div role="tablist" className="flex items-center gap-1 rounded-lg border border-border bg-surface p-0.5">
+			{options.map((option) => {
+				const selected = option.value === value;
+				return (
+					<button
+						key={option.value}
+						role="tab"
+						aria-selected={selected}
+						onClick={() => onChange(option.value)}
+						className={cx(
+							'relative rounded-md px-3 py-1.5 text-[13px] font-medium transition-colors',
+							selected ? 'text-fg' : 'text-muted hover:text-fg'
+						)}
+					>
+						{selected && <SlidingIndicator layoutId={layoutId} className="rounded-md" />}
+						<span className="relative z-10">{option.label}</span>
+					</button>
+				);
+			})}
+		</div>
 	);
 }
 

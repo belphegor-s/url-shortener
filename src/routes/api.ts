@@ -63,7 +63,9 @@ api.get('/overview', async (c) => {
 	const [totals, series, topLinks, topCountries, topReferrers] = await c.env.DB.batch([
 		c.env.DB.prepare(totalsSql).bind(...ifUid(5)),
 		c.env.DB.prepare(
-			`SELECT date(a.timestamp) AS day, COUNT(*) AS clicks FROM analytics a ${all ? '' : 'JOIN urls u ON u.id = a.short_id WHERE u.user_id = ? AND'} a.timestamp >= datetime('now','-29 day') GROUP BY day ORDER BY day`
+			// The owner-scoped variant needs the join to reach `urls.user_id`; the platform
+			// variant still needs its own WHERE, so the keyword lives inside both branches.
+			`SELECT date(a.timestamp) AS day, COUNT(*) AS clicks FROM analytics a ${all ? 'WHERE' : 'JOIN urls u ON u.id = a.short_id WHERE u.user_id = ? AND'} a.timestamp >= datetime('now','-29 day') GROUP BY day ORDER BY day`
 		).bind(...ifUid(1)),
 		c.env.DB.prepare(
 			`SELECT a.short_id AS id, u.original_url, COUNT(*) AS clicks FROM analytics a JOIN urls u ON u.id = a.short_id ${all ? '' : 'WHERE u.user_id = ?'} GROUP BY a.short_id ORDER BY clicks DESC LIMIT 8`

@@ -78,6 +78,42 @@ describe('link ownership', () => {
 	});
 });
 
+describe('overview scopes', () => {
+	it('returns owner-scoped totals, series and breakdowns', async () => {
+		const u = await seedUser();
+		await call('/api/links', json({ url: 'https://example.com/overview-mine' }, { cookie: u.cookie, 'x-csrf-token': u.csrf }));
+
+		const res = await call('/api/overview', { headers: { cookie: u.cookie } });
+		expect(res.status).toBe(200);
+		const body = (await res.json()) as { scope: string; totals: { links: number }; series: unknown[]; top_links: unknown[] };
+		expect(body.scope).toBe('mine');
+		expect(body.totals.links).toBeGreaterThan(0);
+		expect(Array.isArray(body.series)).toBe(true);
+	});
+
+	// The platform-wide branch drops the join it used to borrow its WHERE keyword from,
+	// so every sub-query has to carry its own. Regression guard for a 500 on ?scope=all.
+	it('returns platform-wide data for an admin', async () => {
+		const admin = await seedUser('admin');
+		const other = await seedUser();
+		await call('/api/links', json({ url: 'https://example.com/overview-all' }, { cookie: other.cookie, 'x-csrf-token': other.csrf }));
+
+		const res = await call('/api/overview?scope=all', { headers: { cookie: admin.cookie } });
+		expect(res.status).toBe(200);
+		const body = (await res.json()) as { scope: string; totals: { links: number }; series: unknown[] };
+		expect(body.scope).toBe('all');
+		expect(body.totals.links).toBeGreaterThan(0);
+		expect(Array.isArray(body.series)).toBe(true);
+	});
+
+	it('ignores ?scope=all for a non-admin', async () => {
+		const u = await seedUser();
+		const res = await call('/api/overview?scope=all', { headers: { cookie: u.cookie } });
+		expect(res.status).toBe(200);
+		expect(((await res.json()) as { scope: string }).scope).toBe('mine');
+	});
+});
+
 describe('API keys', () => {
 	it('creates, lists, revokes, and works end-to-end', async () => {
 		const u = await seedUser();

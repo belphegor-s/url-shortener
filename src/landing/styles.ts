@@ -32,6 +32,17 @@ export const styles = /* css */ `
   --shadow-md: 0 4px 14px -4px rgba(9, 9, 11, 0.1), 0 2px 4px -2px rgba(9, 9, 11, 0.05);
   --shadow-lg: 0 24px 50px -16px rgba(9, 9, 11, 0.16);
   --radius: 0.625rem;
+  --crosshair: #a1a1aa;
+  --t-com: #a1a1aa;
+  --t-str: #067a49;
+  --t-cmd: #09090b;
+  --t-flg: #2563eb;
+  --t-num: #b45309;
+  --t-key: #7c3aed;
+  --t-lit: #b45309;
+  --t-var: #c2410c;
+  --t-pun: #a1a1aa;
+  --t-hdr: #7c3aed;
   color-scheme: light;
 }
 
@@ -56,6 +67,17 @@ export const styles = /* css */ `
   --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.4);
   --shadow-md: 0 4px 14px -4px rgba(0, 0, 0, 0.5);
   --shadow-lg: 0 24px 50px -16px rgba(0, 0, 0, 0.6);
+  --crosshair: #52525b;
+  --t-com: #71717a;
+  --t-str: #5ec98a;
+  --t-cmd: #fafafa;
+  --t-flg: #7aa2f7;
+  --t-num: #f0a868;
+  --t-key: #c4b5fd;
+  --t-lit: #f0a868;
+  --t-var: #fbbf24;
+  --t-pun: #71717a;
+  --t-hdr: #c4b5fd;
   color-scheme: dark;
 }
 
@@ -127,14 +149,14 @@ hr { border: 0; border-top: 1px dashed var(--border); margin: 0; }
 .rule { position: relative; border-bottom: 1px dashed var(--border); }
 .rule::before, .rule::after {
   content: ""; position: absolute; display: none; z-index: 2;
-  bottom: -4px; width: 9px; height: 9px;
-  background-image: linear-gradient(var(--border-strong) 0 0), linear-gradient(var(--border-strong) 0 0);
+  bottom: -5px; width: 9px; height: 9px;
+  background-image: linear-gradient(var(--crosshair) 0 0), linear-gradient(var(--crosshair) 0 0);
   background-size: 9px 1px, 1px 9px;
   background-position: center, center;
   background-repeat: no-repeat;
 }
-.rule::before { left: -4px; }
-.rule::after { right: -4px; }
+.rule::before { left: -5px; }
+.rule::after { right: -5px; }
 
 /* Cancels the band's inline padding so inner dividers reach the rails. */
 .bleed { margin-inline: -1rem; }
@@ -220,9 +242,8 @@ hr { border: 0; border-top: 1px dashed var(--border); margin: 0; }
 
 .mark {
   display: grid; place-items: center; flex: none;
-  border-radius: 0.5rem; color: #ffffff;
-  background: linear-gradient(135deg, #7c5cff, #34d3ee);
-  box-shadow: var(--shadow-sm);
+  border-radius: 0.5rem;
+  background: var(--foreground); color: var(--background);
 }
 
 /* ------------------------------------------------------------- header --- */
@@ -270,7 +291,11 @@ hr { border: 0; border-top: 1px dashed var(--border); margin: 0; }
 
 /* --------------------------------------------------------------- hero --- */
 
-.hero { padding-block: 3rem 2.5rem; }
+.hero { position: relative; padding-block: 3rem 2.5rem; }
+/* Behind the copy, above nothing. It keeps pointer events so the credit in its
+   title attribute is reachable on hover, while the copy above it still wins. */
+.hero-gl { position: absolute; inset: 0; width: 100%; height: 100%; z-index: 0; }
+.hero > *:not(.hero-gl) { position: relative; z-index: 1; }
 .hero h1 {
   margin-top: 1.25rem;
   font-size: clamp(2.25rem, 8vw, 4rem);
@@ -379,16 +404,27 @@ hr { border: 0; border-top: 1px dashed var(--border); margin: 0; }
   border-bottom: 1px solid var(--border); background: var(--card-muted);
 }
 .code-head .name { font-size: 0.75rem; color: var(--muted-foreground); }
+.code-head .lang {
+  padding: 0.0625rem 0.375rem; border: 1px dashed var(--border-strong); border-radius: 0.3125rem;
+  font-size: 0.625rem; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase;
+  color: var(--subtle-foreground);
+}
 .code-head .btn { margin-left: auto; }
 pre.code {
   margin: 0; padding: 1.125rem; overflow-x: auto;
-  font-size: 0.8125rem; line-height: 1.7; color: var(--muted-foreground);
+  font-size: 0.8125rem; line-height: 1.7; color: var(--foreground);
   -webkit-overflow-scrolling: touch;
 }
-pre.code .cm { color: var(--subtle-foreground); }
-pre.code .fn { color: var(--foreground); font-weight: 500; }
-pre.code .st { color: var(--success); }
-pre.code .ky { color: var(--foreground); }
+.t-com { color: var(--t-com); font-style: italic; }
+.t-str { color: var(--t-str); }
+.t-cmd { color: var(--t-cmd); font-weight: 600; }
+.t-flg { color: var(--t-flg); }
+.t-num { color: var(--t-num); }
+.t-key { color: var(--t-key); }
+.t-lit { color: var(--t-lit); }
+.t-var { color: var(--t-var); }
+.t-pun { color: var(--t-pun); }
+.t-hdr { color: var(--t-hdr); font-weight: 500; }
 
 /* ---------------------------------------------------------------- cta --- */
 
