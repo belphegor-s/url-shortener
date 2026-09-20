@@ -59,7 +59,7 @@ function headerHtml(o: PageOptions): string {
 		: `<a class="btn btn-primary" href="/auth/github">${icon('github', { size: 16, filled: true })} Sign in with GitHub</a>`;
 
 	return `<header class="site-header" id="site-header">
-  <div class="container header-inner">
+  <div class="container header-inner rule">
     <a class="brand" href="/" aria-label="SHRT home">${brandMark()}<span class="name">SHRT</span></a>
     <nav class="nav-desktop" aria-label="Primary">${nav}</nav>
     <div class="header-actions">
@@ -76,15 +76,17 @@ function headerHtml(o: PageOptions): string {
     </div>
   </div>
   <div class="mobile-menu" id="mobile-menu">
-    <nav aria-label="Mobile">${nav}<a href="${esc(REPO_URL)}" target="_blank" rel="noreferrer noopener">Source on GitHub</a></nav>
-    <div class="actions">${accountMobile}</div>
+    <div class="container rule">
+      <nav aria-label="Mobile">${nav}<a href="${esc(REPO_URL)}" target="_blank" rel="noreferrer noopener">Source on GitHub</a></nav>
+      <div class="actions">${accountMobile}</div>
+    </div>
   </div>
 </header>`;
 }
 
 function footerHtml(): string {
 	return `<footer class="site-footer">
-  <div class="container footer-top">
+  <div class="container footer-top rule">
     <div>
       <a class="brand" href="/">${brandMark()}<span class="name">SHRT</span></a>
       <p class="blurb">Short links, long reach. An open-source URL shortener with edge redirects and privacy-friendly analytics.</p>
@@ -160,7 +162,6 @@ ${o.jsonLd ? `<script type="application/ld+json">${JSON.stringify(o.jsonLd)}</sc
 <style>${styles}${o.extraCss ?? ''}</style>
 </head>
 <body${o.bodyAttrs ? ` ${o.bodyAttrs}` : ''}>
-<div class="grid-bg" aria-hidden="true"></div>
 ${headerHtml(o)}
 ${o.content}
 ${footerHtml()}

@@ -5,7 +5,7 @@ import { api, ApiError, type LinkRow, type Scope } from '../lib/api';
 import { useAuth } from '../lib/auth';
 import { PageHeader } from '../components/Layout';
 import { motion } from 'motion/react';
-import { Button, Card, Input, Badge, Checkbox, CopyButton, Spinner, EmptyState, ConfirmDialog, cx } from '../components/ui';
+import { Button, Card, Input, Badge, Checkbox, CopyButton, SkeletonRows, EmptyState, ConfirmDialog, cx } from '../components/ui';
 import { Modal } from '../components/Modal';
 import { IconSearch, IconPlus, IconTrash, IconLink, IconExternal, IconChevron, IconX, IconPower } from '../components/icons';
 import { full, fmtDate, relative, hostOf } from '../lib/format';
@@ -154,8 +154,9 @@ export default function Links() {
 				</div>
 
 				{!data ? (
-					<div className="grid place-items-center py-20 text-muted">
-						<Spinner className="size-5" />
+					<div role="status" aria-busy="true">
+						<span className="sr-only">Loading links</span>
+						<SkeletonRows rows={8} columns={4} />
 					</div>
 				) : rows.length === 0 ? (
 					<EmptyState icon={<IconLink className="size-5" />} title="No links found" hint={q ? 'Try a different search.' : 'Create your first short link.'} />

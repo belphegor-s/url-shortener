@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { api, ApiError, type ApiKeyRow } from '../lib/api';
 import { PageHeader } from '../components/Layout';
-import { Button, Card, Input, Badge, CopyButton, Spinner, EmptyState, ConfirmDialog } from '../components/ui';
+import { Button, Card, Input, Badge, CopyButton, SkeletonRows, Skeletons, EmptyState, ConfirmDialog } from '../components/ui';
 import { Modal } from '../components/Modal';
 import { IconKey, IconPlus, IconTrash, IconX } from '../components/icons';
 import { fmtDate, relative } from '../lib/format';
@@ -34,9 +34,11 @@ export default function ApiKeys() {
 			/>
 
 			{isLoading ? (
-				<div className="grid place-items-center py-24 text-muted">
-					<Spinner className="size-6" />
-				</div>
+				<Skeletons label="Loading API keys">
+					<Card className="overflow-hidden">
+						<SkeletonRows rows={4} columns={3} />
+					</Card>
+				</Skeletons>
 			) : !data || data.data.length === 0 ? (
 				<Card>
 					<EmptyState icon={<IconKey className="size-5" />} title="No API keys yet" hint="Create a key to use the programmatic API from your own scripts and services." />

@@ -8,22 +8,21 @@ export default function Login() {
 	const { signIn } = useAuth();
 
 	return (
-		<div className="relative grid min-h-dvh place-items-center px-4">
-			<div className="accent-glow pointer-events-none absolute inset-x-0 top-0 h-72" />
-			<div className="animate-in relative w-full max-w-[400px]">
+		<div className="grid min-h-dvh place-items-center px-4 py-10">
+			<div className="animate-in w-full max-w-[400px]">
 				<div className="mb-7 flex flex-col items-center text-center">
-					<div className="mb-4 grid size-12 place-items-center rounded-2xl border border-border bg-surface shadow-lg">
-						<IconLink className="size-5 text-accent" />
+					<div className="mark mb-4 size-11 rounded-xl">
+						<IconLink className="size-5" />
 					</div>
 					<h1 className="text-lg font-semibold tracking-tight">Sign in to SHRT</h1>
 					<p className="mt-1 text-sm text-muted">Short links and analytics, straight from the edge.</p>
 				</div>
 
-				<div className="rounded-2xl border border-border bg-surface p-5 shadow-2xl">
+				<div className="dashed-box rounded-xl border-border-strong bg-surface p-5">
 					<ul className="mb-5 space-y-2.5">
 						{PERKS.map((p) => (
 							<li key={p} className="flex items-start gap-2.5 text-[13px] text-muted">
-								<span className="mt-0.5 grid size-[18px] shrink-0 place-items-center rounded-full bg-accent/15 text-accent">
+								<span className="mt-0.5 grid size-[18px] shrink-0 place-items-center rounded-full bg-success/15 text-success">
 									<IconCheck className="size-3" />
 								</span>
 								{p}
@@ -34,11 +33,12 @@ export default function Login() {
 					<Button variant="primary" className="w-full" onClick={signIn}>
 						<IconGithub className="size-4" /> Continue with GitHub
 					</Button>
-					<p className="mt-3 text-center text-[12px] text-faint">No password to remember — we only read your public profile and primary email.</p>
+					<p className="mt-3 text-center text-[12px] text-faint">No password to remember. We only read your public profile and primary email.</p>
 				</div>
+
 				<p className="mt-5 text-center text-[12px] text-faint">
-					<a href="/" className="hover:text-muted">
-						← Back to home
+					<a href="/" className="transition hover:text-fg">
+						Back to site
 					</a>
 				</p>
 			</div>

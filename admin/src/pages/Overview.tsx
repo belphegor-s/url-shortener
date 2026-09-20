@@ -3,7 +3,7 @@ import { useQuery } from '@tanstack/react-query';
 import { api, type Scope } from '../lib/api';
 import { useAuth } from '../lib/auth';
 import { PageHeader } from '../components/Layout';
-import { Card, Skeleton, EmptyState, cx } from '../components/ui';
+import { Card, Skeleton, SkeletonChart, SkeletonStats, Skeletons, EmptyState, cx } from '../components/ui';
 import { TrendChart, BarList } from '../components/charts';
 import { compact, full, hostOf } from '../lib/format';
 import { Flag } from '../components/Flag';
@@ -11,13 +11,10 @@ import { IconChart, IconGlobe, IconLink } from '../components/icons';
 
 function Stat({ label, value, sub }: { label: string; value: string; sub?: string }) {
 	return (
-		<Card className="relative overflow-hidden p-4">
-			<div className="accent-glow pointer-events-none absolute inset-0 opacity-60" />
-			<div className="relative">
-				<div className="text-[12px] font-medium uppercase tracking-wide text-faint">{label}</div>
-				<div className="tabular mt-2 text-2xl font-semibold text-fg sm:text-[28px]">{value}</div>
-				{sub && <div className="mt-1 text-[12px] text-muted">{sub}</div>}
-			</div>
+		<Card className="p-4">
+			<div className="text-[12px] font-medium uppercase tracking-wide text-faint">{label}</div>
+			<div className="tabular mt-2 text-2xl font-semibold text-fg sm:text-[28px]">{value}</div>
+			{sub && <div className="mt-1 text-[12px] text-muted">{sub}</div>}
 		</Card>
 	);
 }
@@ -105,21 +102,34 @@ export function ScopeToggle({ scope, onChange }: { scope: Scope; onChange: (s: S
 	);
 }
 
+/** Mirrors the real Overview: header, stat row, trend chart, three bar-list panels. */
 function OverviewSkeleton() {
 	return (
-		<div>
-			<Skeleton className="mb-6 h-8 w-40" />
-			<div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
-				{Array.from({ length: 4 }).map((_, i) => (
-					<Skeleton key={i} className="h-24" />
-				))}
+		<Skeletons label="Loading overview">
+			<div className="mb-6">
+				<Skeleton className="h-6 w-32" />
+				<Skeleton className="mt-2 h-3 w-60" />
 			</div>
-			<Skeleton className="mt-4 h-64" />
+			<SkeletonStats />
+			<SkeletonChart className="mt-4" />
 			<div className="mt-4 grid gap-4 lg:grid-cols-3">
-				{Array.from({ length: 3 }).map((_, i) => (
-					<Skeleton key={i} className="h-56" />
+				{Array.from({ length: 3 }).map((_, panel) => (
+					<Card key={panel} className="p-4">
+						<Skeleton className="h-3 w-28" />
+						<div className="mt-4 flex flex-col gap-3.5">
+							{[92, 74, 58, 43, 30].map((width, row) => (
+								<div key={row}>
+									<div className="flex items-center justify-between gap-3">
+										<Skeleton className="h-2.5 w-24" />
+										<Skeleton className="h-2.5 w-8" />
+									</div>
+									<Skeleton className="mt-2 h-1.5 rounded-full" style={{ width: `${width}%` }} />
+								</div>
+							))}
+						</div>
+					</Card>
 				))}
 			</div>
-		</div>
+		</Skeletons>
 	);
 }

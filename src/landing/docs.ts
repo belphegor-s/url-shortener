@@ -38,7 +38,7 @@ type Row = [name: string, type: string, required: boolean, description: string];
 export function renderDocs(o: DocsOptions): string {
 	const base = o.baseUrl;
 
-	const content = `<main class="container docs">
+	const content = `<main class="container docs rule">
   <aside class="docs-nav" id="docs-nav">
     <h4>On this page</h4>
     <ul>
@@ -51,13 +51,13 @@ export function renderDocs(o: DocsOptions): string {
       <p class="eyebrow">API reference</p>
       <h1 style="margin-top:0.75rem">SHRT HTTP API</h1>
       <p>Create short links and read their analytics over plain HTTP. Every request and response is JSON, every endpoint is scoped to the authenticated account, and the whole thing is open source.</p>
-      <div class="grid-2" style="margin-top:1.5rem">
-        <div class="card feature">
+      <div class="docs-cards" style="margin-top:1.5rem">
+        <div class="feature">
           <div class="icon">${icon('globe', { size: 17 })}</div>
           <h3>Base URL</h3>
           <p style="font-family:'JetBrains Mono',ui-monospace,monospace;color:var(--foreground)">${esc(base)}</p>
         </div>
-        <div class="card feature">
+        <div class="feature">
           <div class="icon">${icon('layers', { size: 17 })}</div>
           <h3>Content type</h3>
           <p>Send <code>content-type: application/json</code> on requests with a body. Responses are always JSON, apart from the redirect itself.</p>

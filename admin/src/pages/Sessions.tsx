@@ -3,7 +3,7 @@ import { api, type SessionRow } from '../lib/api';
 import { useAuth } from '../lib/auth';
 import { PageHeader } from '../components/Layout';
 import { useState } from 'react';
-import { Button, Card, Badge, Spinner, EmptyState, ConfirmDialog, cx } from '../components/ui';
+import { Button, Card, Badge, Skeleton, Skeletons, EmptyState, ConfirmDialog, cx } from '../components/ui';
 import { IconUsers, IconGlobe } from '../components/icons';
 import { fmtDate, relative, uaLabel } from '../lib/format';
 import { Flag } from '../components/Flag';
@@ -28,7 +28,7 @@ export default function Sessions() {
 			<PageHeader title="Sessions" subtitle="Devices currently signed in to this account" />
 
 			{isLoading ? (
-				<div className="grid place-items-center py-24 text-muted"><Spinner className="size-6" /></div>
+				<SessionsSkeleton />
 			) : !data || data.data.length === 0 ? (
 				<Card>
 					<EmptyState icon={<IconUsers className="size-5" />} title="No active sessions" />
@@ -82,5 +82,28 @@ export default function Sessions() {
 				onCancel={() => setPending(null)}
 			/>
 		</div>
+	);
+}
+
+/** Mirrors the session cards: flag tile, device line, meta lines, revoke button. */
+function SessionsSkeleton() {
+	return (
+		<Skeletons label="Loading sessions">
+			<div className="grid gap-3">
+				{Array.from({ length: 3 }).map((_, i) => (
+					<Card key={i} className="flex flex-col gap-3 p-4 sm:flex-row sm:items-center">
+						<div className="flex min-w-0 flex-1 items-start gap-3">
+							<Skeleton className="size-10 shrink-0 rounded-xl" />
+							<div className="min-w-0 flex-1">
+								<Skeleton className="h-3.5 w-44" />
+								<Skeleton className="mt-2.5 h-2.5 w-28" />
+								<Skeleton className="mt-2 h-2.5 w-52" />
+							</div>
+						</div>
+						<Skeleton className="h-8 w-20 rounded-lg" />
+					</Card>
+				))}
+			</div>
+		</Skeletons>
 	);
 }

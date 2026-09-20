@@ -2,6 +2,14 @@
 export const docsStyles = /* css */ `
 .docs { display: grid; gap: 2rem; padding-block: 2rem 4rem; grid-template-columns: minmax(0, 1fr); align-items: start; }
 
+/* Two summary cells under the intro heading, dashed like the rest of the grid. */
+.docs-cards {
+  display: grid; grid-template-columns: minmax(0, 1fr);
+  border: 1px dashed var(--border-strong); border-radius: var(--radius); overflow: hidden;
+}
+.docs-cards > * { padding: 1.25rem; }
+.docs-cards > * + * { border-top: 1px dashed var(--border); }
+
 /* Sidebar collapses into a sticky, horizontally scrollable chip rail on small screens. */
 .docs-nav {
   position: sticky; top: 3.5rem; z-index: 30; min-width: 0;
@@ -72,11 +80,23 @@ tbody tr:first-child td { border-top: 0; }
 tbody td:first-child { color: var(--foreground); font-family: "JetBrains Mono", ui-monospace, monospace; white-space: nowrap; }
 td .req { color: var(--destructive); font-size: 0.6875rem; margin-left: 0.25rem; }
 
+@media (min-width: 640px) {
+  .docs-cards { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .docs-cards > * + * { border-top: 0; border-left: 1px dashed var(--border); }
+}
+
+@media (min-width: 768px) {
+  /* Keep the chip rail full-bleed against the wider band padding. */
+  .docs-nav { margin-inline: -1.5rem; padding-inline: 1.5rem; }
+}
+
 @media (min-width: 900px) {
   .docs { grid-template-columns: 13.75rem minmax(0, 1fr); gap: 3rem; padding-block: 3rem 5rem; }
   .docs-nav {
     position: sticky; top: 5rem; z-index: 1;
-    margin-inline: 0; padding: 0; border: 0; background: none; backdrop-filter: none; -webkit-backdrop-filter: none;
+    margin-inline: 0; padding: 0 1.5rem 0 0;
+    border: 0; border-right: 1px dashed var(--border);
+    background: none; backdrop-filter: none; -webkit-backdrop-filter: none;
     max-height: calc(100vh - 7rem); overflow-y: auto;
   }
   .docs-nav h4 { display: block; margin-bottom: 0.625rem; font-size: 0.75rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted-foreground); }

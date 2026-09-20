@@ -2,8 +2,10 @@ import { Suspense, useState } from 'react';
 import { NavLink, Outlet, useLocation } from 'react-router-dom';
 import { AnimatePresence, motion } from 'motion/react';
 import { useAuth } from '../lib/auth';
-import { Button, Spinner, Badge, cx } from './ui';
-import { IconChart, IconLink, IconUsers, IconKey, IconLogout, IconMenu, IconX } from './icons';
+import { useTheme } from '../lib/theme';
+import { Badge, Skeleton, SkeletonRows, SkeletonStats, Skeletons, cx } from './ui';
+import { Button } from './ui';
+import { IconChart, IconLink, IconUsers, IconKey, IconLogout, IconMenu, IconX, IconSun, IconMoon, IconHome } from './icons';
 
 const NAV = [
 	{ to: '/', label: 'Overview', icon: IconChart, end: true },
@@ -53,7 +55,7 @@ function NavItems({ onNavigate, indicatorId, admin }: { onNavigate?: () => void;
 function Brand() {
 	return (
 		<div className="flex items-center gap-2.5 px-3">
-			<div className="grid size-7 place-items-center rounded-lg bg-accent text-accent-fg">
+			<div className="mark size-7 rounded-lg">
 				<IconLink className="size-4" />
 			</div>
 			<div className="leading-tight">
@@ -61,6 +63,20 @@ function Brand() {
 				<div className="text-[11px] text-faint">dashboard</div>
 			</div>
 		</div>
+	);
+}
+
+function ThemeToggle({ className }: { className?: string }) {
+	const [theme, toggle] = useTheme();
+	return (
+		<button
+			onClick={toggle}
+			title="Toggle theme"
+			aria-label="Toggle theme"
+			className={cx('grid size-8 shrink-0 place-items-center rounded-lg text-faint transition hover:bg-surface-2 hover:text-fg', className)}
+		>
+			{theme === 'dark' ? <IconSun className="size-[18px]" /> : <IconMoon className="size-[18px]" />}
+		</button>
 	);
 }
 
@@ -91,48 +107,62 @@ export default function Layout() {
 
 	return (
 		<div className="min-h-dvh">
-			{/* Desktop sidebar */}
-			<aside className="fixed inset-y-0 left-0 hidden w-60 flex-col border-r border-border bg-surface/40 px-3 py-5 lg:flex">
+			{/* Desktop sidebar. The dashed right edge is the blueprint rail the content sits against. */}
+			<aside className="fixed inset-y-0 left-0 hidden w-60 flex-col border-r border-dashed border-border bg-surface/40 py-5 lg:flex">
 				<Brand />
-				<div className="mt-7 px-0">
+				<div className="mt-7 px-3">
 					<NavItems indicatorId="nav-desktop" admin={admin} />
 				</div>
-				<div className="mt-auto border-t border-border px-1 pt-4">
-					<div className="flex items-center justify-between gap-2 px-2">
+				<div className="mt-auto border-t border-dashed border-border px-4 pt-4">
+					<div className="flex items-center justify-between gap-2">
 						{identity}
-						<button onClick={logout} title="Sign out" className="grid size-8 shrink-0 place-items-center rounded-lg text-faint transition hover:bg-surface-2 hover:text-danger">
-							<IconLogout className="size-[18px]" />
-						</button>
+						<div className="flex shrink-0 items-center">
+							<ThemeToggle />
+							<button onClick={logout} title="Sign out" className="grid size-8 shrink-0 place-items-center rounded-lg text-faint transition hover:bg-surface-2 hover:text-danger">
+								<IconLogout className="size-[18px]" />
+							</button>
+						</div>
 					</div>
+					<a href="/" className="mt-3 flex items-center gap-2 rounded-lg px-1 py-1.5 text-[12px] text-faint transition hover:text-fg">
+						<IconHome className="size-3.5" /> Back to site
+					</a>
 				</div>
 			</aside>
 
 			{/* Mobile top bar */}
-			<header className="glass sticky top-0 z-30 flex h-14 items-center justify-between border-b border-border px-4 lg:hidden">
-				<button onClick={() => setOpen(true)} className="grid size-9 place-items-center rounded-lg text-muted hover:bg-surface-2">
+			<header className="glass sticky top-0 z-30 flex h-14 items-center justify-between border-b border-dashed border-border px-4 lg:hidden">
+				<button onClick={() => setOpen(true)} aria-label="Open menu" className="grid size-9 place-items-center rounded-lg text-muted hover:bg-surface-2">
 					<IconMenu className="size-5" />
 				</button>
 				<span className="text-sm font-semibold">{title}</span>
-				<button onClick={logout} className="grid size-9 place-items-center rounded-lg text-faint hover:bg-surface-2 hover:text-danger">
-					<IconLogout className="size-[18px]" />
-				</button>
+				<div className="flex items-center">
+					<ThemeToggle />
+					<button onClick={logout} aria-label="Sign out" className="grid size-8 place-items-center rounded-lg text-faint hover:bg-surface-2 hover:text-danger">
+						<IconLogout className="size-[18px]" />
+					</button>
+				</div>
 			</header>
 
 			{/* Mobile drawer */}
 			{open && (
 				<div className="fixed inset-0 z-40 lg:hidden">
 					<div className="absolute inset-0 bg-black/60" onClick={() => setOpen(false)} />
-					<div className="absolute inset-y-0 left-0 w-64 animate-in border-r border-border bg-surface px-3 py-5">
-						<div className="flex items-center justify-between">
+					<div className="animate-in absolute inset-y-0 left-0 w-64 border-r border-dashed border-border bg-bg py-5">
+						<div className="flex items-center justify-between pr-3">
 							<Brand />
-							<button onClick={() => setOpen(false)} className="grid size-9 place-items-center rounded-lg text-muted hover:bg-surface-2">
+							<button onClick={() => setOpen(false)} aria-label="Close menu" className="grid size-9 place-items-center rounded-lg text-muted hover:bg-surface-2">
 								<IconX className="size-5" />
 							</button>
 						</div>
-						<div className="mt-7">
+						<div className="mt-7 px-3">
 							<NavItems onNavigate={() => setOpen(false)} indicatorId="nav-mobile" admin={admin} />
 						</div>
-						<div className="mt-6 border-t border-border pt-4">{identity}</div>
+						<div className="mt-6 border-t border-dashed border-border px-4 pt-4">
+							{identity}
+							<a href="/" className="mt-3 flex items-center gap-2 rounded-lg px-1 py-1.5 text-[12px] text-faint transition hover:text-fg">
+								<IconHome className="size-3.5" /> Back to site
+							</a>
+						</div>
 					</div>
 				</div>
 			)}
@@ -140,7 +170,7 @@ export default function Layout() {
 			{/* Content */}
 			<main className="lg:pl-60">
 				<div className="mx-auto w-full max-w-6xl px-4 py-6 sm:px-6 lg:px-10 lg:py-9">
-					<Suspense fallback={<div className="grid place-items-center py-24 text-muted"><Spinner className="size-6" /></div>}>
+					<Suspense fallback={<RouteSkeleton />}>
 						<AnimatePresence mode="wait">
 							<motion.div
 								key={loc.pathname}
@@ -159,9 +189,26 @@ export default function Layout() {
 	);
 }
 
+/** Shown while a route's chunk is still downloading. Deliberately generic: it has to
+ *  stand in for any page, so it shows a header, a stat row and a list. */
+function RouteSkeleton() {
+	return (
+		<Skeletons label="Loading page">
+			<div className="mb-6">
+				<Skeleton className="h-6 w-40" />
+				<Skeleton className="mt-2 h-3 w-64" />
+			</div>
+			<SkeletonStats />
+			<div className="mt-4 rounded-xl border border-border bg-surface">
+				<SkeletonRows rows={5} />
+			</div>
+		</Skeletons>
+	);
+}
+
 export function PageHeader({ title, subtitle, action }: { title: string; subtitle?: string; action?: React.ReactNode }) {
 	return (
-		<div className="mb-6 flex items-end justify-between gap-4">
+		<div className="mb-6 flex flex-wrap items-end justify-between gap-3">
 			<div>
 				<h1 className="text-xl font-semibold tracking-tight text-fg sm:text-2xl">{title}</h1>
 				{subtitle && <p className="mt-1 text-sm text-muted">{subtitle}</p>}

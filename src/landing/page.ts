@@ -47,8 +47,8 @@ export function renderLanding(o: LandingOptions): string {
 		: `${icon('lock', { size: 14 })} Free with GitHub. No password, no email list, no third-party trackers.`;
 
 	const content = `<main>
-  <section class="container hero">
-    <span class="badge"><span class="pulse"></span> Open source, self-hostable, running on Cloudflare Workers</span>
+  <section class="container hero rule">
+    <span class="badge"><span class="pulse"></span> Open source &middot; Runs on Cloudflare Workers</span>
     <h1>Short links,<br /><span class="dim">long reach.</span></h1>
     <p class="lead">SHRT turns sprawling URLs into crisp, shareable links served from the edge, with per-click analytics that respect the people clicking them.</p>
 
@@ -71,8 +71,8 @@ export function renderLanding(o: LandingOptions): string {
     </form>
   </section>
 
-  <section class="container" style="padding-bottom:1rem">
-    <div class="grid-4">
+  <section class="container rule">
+    <div class="bleed cells cells-4">
       ${stat('300+', 'edge locations serving redirects')}
       ${stat('&lt;30ms', 'typical warm redirect latency')}
       ${stat('100%', 'self-hosted on your own account')}
@@ -80,13 +80,13 @@ export function renderLanding(o: LandingOptions): string {
     </div>
   </section>
 
-  <section class="container section" id="features">
+  <section class="container section rule" id="features">
     <div class="section-head">
       <p class="eyebrow">Features</p>
       <h2>Everything a link needs. Nothing it does not.</h2>
       <p>No bloated dashboard, no cookie banner, no marketing pixels. Fast redirects and the numbers that tell you what is working.</p>
     </div>
-    <div class="grid-3">
+    <div class="bleed cells cells-3">
       ${feature('bolt', 'Edge-fast redirects', 'Every short link resolves at the nearest Cloudflare location, with a read-through KV cache so the hot path never waits on the database.')}
       ${feature('chart', 'Click analytics', 'Clicks, countries, referrers and a 30-day trend, per link and across your whole account.')}
       ${feature('link', 'Custom short codes', 'Claim memorable slugs like <code>/launch</code> or <code>/me</code>. Reserved routes are always protected.')}
@@ -96,19 +96,19 @@ export function renderLanding(o: LandingOptions): string {
     </div>
   </section>
 
-  <section class="container section" id="how-it-works">
+  <section class="container section rule" id="how-it-works">
     <div class="section-head">
       <p class="eyebrow">How it works</p>
       <h2>Three steps. About ten seconds.</h2>
     </div>
-    <div class="grid-3">
+    <div class="bleed cells cells-3">
       ${step(1, 'Sign in with GitHub', 'One click, no password. SHRT reads your public profile and primary email, and nothing else.')}
       ${step(2, 'Paste your URL', 'Drop in any http or https link. Optionally claim a custom code or set an expiry.')}
       ${step(3, 'Share and measure', 'Send the short link anywhere and watch clicks, countries and referrers arrive live.')}
     </div>
   </section>
 
-  <section class="container section" id="analytics">
+  <section class="container section rule" id="analytics">
     <div class="split">
       <div>
         <p class="eyebrow">Analytics</p>
@@ -126,8 +126,8 @@ export function renderLanding(o: LandingOptions): string {
     </div>
   </section>
 
-  <section class="container section" id="open-source">
-    <div class="card cta">
+  <section class="container section cta rule" id="open-source">
+    <div>
       <h2>${authed ? 'Your links are waiting.' : 'Ready to make every link count?'}</h2>
       <p>${authed ? 'Jump back into the dashboard, or read the API reference to automate the boring parts.' : 'Sign in with GitHub and create your first short link in seconds. Free, fast, and entirely yours.'}</p>
       <div class="row">
@@ -164,13 +164,13 @@ export function renderLanding(o: LandingOptions): string {
 	});
 }
 
-const stat = (value: string, label: string): string => `<div class="card stat"><div class="v">${value}</div><div class="l">${label}</div></div>`;
+const stat = (value: string, label: string): string => `<div class="stat"><div class="v">${value}</div><div class="l">${label}</div></div>`;
 
 const feature = (name: IconName, title: string, body: string): string =>
-	`<div class="card feature"><div class="icon">${icon(name, { size: 17 })}</div><h3>${title}</h3><p>${body}</p></div>`;
+	`<div class="feature"><div class="icon">${icon(name, { size: 17 })}</div><h3>${title}</h3><p>${body}</p></div>`;
 
 const step = (n: number, title: string, body: string): string =>
-	`<div class="card step"><div class="n">${n}</div><h3>${title}</h3><p>${body}</p></div>`;
+	`<div class="step"><div class="n">${n}</div><h3>${title}</h3><p>${body}</p></div>`;
 
 function codeCard(baseUrl: string): string {
 	const snippet =

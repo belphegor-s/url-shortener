@@ -1,7 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { api } from '../lib/api';
 import { PageHeader } from '../components/Layout';
-import { Card, Badge, Spinner, EmptyState } from '../components/ui';
+import { Card, Badge, SkeletonRows, Skeletons, EmptyState } from '../components/ui';
 import { IconUsers, IconGithub } from '../components/icons';
 import { full, fmtDate, relative } from '../lib/format';
 
@@ -13,9 +13,11 @@ export default function Users() {
 			<PageHeader title="Users" subtitle="Every account on the platform" />
 
 			{isLoading ? (
-				<div className="grid place-items-center py-24 text-muted">
-					<Spinner className="size-6" />
-				</div>
+				<Skeletons label="Loading users">
+					<Card className="overflow-hidden">
+						<SkeletonRows rows={6} leading columns={4} />
+					</Card>
+				</Skeletons>
 			) : !data || data.data.length === 0 ? (
 				<Card>
 					<EmptyState icon={<IconUsers className="size-5" />} title="No users yet" />

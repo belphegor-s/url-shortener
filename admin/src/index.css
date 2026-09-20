@@ -1,29 +1,87 @@
 @import 'tailwindcss';
 
-/* ---- Design tokens: dark, Linear-style ---- */
+/* ---------------------------------------------------------------------------
+   Design tokens, shared with the public site (src/landing/styles.ts).
+   A neutral zinc scale, a monochrome accent, one radius, dashed structural
+   borders. Token names are kept stable so the utility classes across the app
+   keep working; only the values change per theme.
+
+   Dark is the default. A visitor with no stored preference follows their OS,
+   which is resolved in CSS so there is no flash before the bundle boots. The
+   theme toggle then writes `data-theme` on <html> and wins over both.
+--------------------------------------------------------------------------- */
+
 @theme {
-	--color-bg: #0a0a0b;
-	--color-surface: #121214;
+	--color-bg: #09090b;
+	--color-surface: #0f0f11;
 	--color-surface-2: #18181b;
-	--color-elevated: #1d1d21;
-	--color-border: #232327;
-	--color-border-strong: #2e2e33;
-	--color-fg: #ededef;
-	--color-muted: #9a9aa3;
-	--color-faint: #6a6a73;
-	--color-accent: #7c5cff;
-	--color-accent-fg: #ffffff;
-	--color-success: #3fb950;
-	--color-danger: #f85149;
-	--color-warn: #d29922;
+	--color-elevated: #27272a;
+	--color-border: #26262a;
+	--color-border-strong: #3f3f46;
+	--color-fg: #fafafa;
+	--color-muted: #a1a1aa;
+	--color-faint: #71717a;
+	--color-accent: #fafafa;
+	--color-accent-fg: #18181b;
+	--color-success: #4ade80;
+	--color-danger: #f87171;
+	--color-warn: #facc15;
 
 	--font-sans: 'Inter', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
 	--font-mono: 'JetBrains Mono', ui-monospace, 'SF Mono', 'Menlo', monospace;
 
-	--radius: 0.75rem;
+	--radius: 0.625rem;
 }
 
 @layer base {
+	:root {
+		color-scheme: dark;
+	}
+
+	/* No explicit choice yet: follow the operating system. */
+	@media (prefers-color-scheme: light) {
+		:root:not([data-theme='dark']) {
+			color-scheme: light;
+			--color-bg: #ffffff;
+			--color-surface: #ffffff;
+			--color-surface-2: #f4f4f5;
+			--color-elevated: #e4e4e7;
+			--color-border: #e4e4e7;
+			--color-border-strong: #d4d4d8;
+			--color-fg: #09090b;
+			--color-muted: #71717a;
+			--color-faint: #a1a1aa;
+			--color-accent: #18181b;
+			--color-accent-fg: #fafafa;
+			--color-success: #16a34a;
+			--color-danger: #dc2626;
+			--color-warn: #ca8a04;
+		}
+	}
+
+	/* Explicit choice from the theme toggle. */
+	:root[data-theme='light'] {
+		color-scheme: light;
+		--color-bg: #ffffff;
+		--color-surface: #ffffff;
+		--color-surface-2: #f4f4f5;
+		--color-elevated: #e4e4e7;
+		--color-border: #e4e4e7;
+		--color-border-strong: #d4d4d8;
+		--color-fg: #09090b;
+		--color-muted: #71717a;
+		--color-faint: #a1a1aa;
+		--color-accent: #18181b;
+		--color-accent-fg: #fafafa;
+		--color-success: #16a34a;
+		--color-danger: #dc2626;
+		--color-warn: #ca8a04;
+	}
+
+	:root[data-theme='dark'] {
+		color-scheme: dark;
+	}
+
 	* {
 		border-color: var(--color-border);
 	}
@@ -45,7 +103,11 @@
 		text-rendering: optimizeLegibility;
 	}
 	::selection {
-		background: color-mix(in srgb, var(--color-accent) 35%, transparent);
+		background: color-mix(in srgb, var(--color-fg) 16%, transparent);
+	}
+	:focus-visible {
+		outline: 2px solid var(--color-border-strong);
+		outline-offset: 2px;
 	}
 	/* Subtle scrollbars */
 	* {
@@ -95,13 +157,71 @@
 		font-variant-numeric: tabular-nums;
 	}
 	.glass {
-		background: color-mix(in srgb, var(--color-bg) 72%, transparent);
+		background: color-mix(in srgb, var(--color-bg) 82%, transparent);
 		backdrop-filter: blur(12px);
+		-webkit-backdrop-filter: blur(12px);
 	}
-	/* Accent radial glow used behind hero numbers */
-	.accent-glow {
-		background: radial-gradient(120% 120% at 0% 0%, color-mix(in srgb, var(--color-accent) 16%, transparent), transparent 60%);
+
+	/* Brand mark, identical to the public site. */
+	.mark {
+		display: grid;
+		place-items: center;
+		color: #ffffff;
+		background: linear-gradient(135deg, #7c5cff, #34d3ee);
 	}
+
+	/* Blueprint chrome: dashed structural lines and the crosshair that marks a
+	   corner where two of them meet. */
+	.rule-b {
+		border-bottom: 1px dashed var(--color-border);
+	}
+	.rule-r {
+		border-right: 1px dashed var(--color-border);
+	}
+	.rule-t {
+		border-top: 1px dashed var(--color-border);
+	}
+	.dashed-box {
+		border: 1px dashed var(--color-border);
+	}
+	.crosshair {
+		position: relative;
+	}
+	.crosshair::after {
+		content: '';
+		position: absolute;
+		z-index: 2;
+		right: -4.5px;
+		bottom: -4.5px;
+		width: 9px;
+		height: 9px;
+		background-image: linear-gradient(var(--color-border-strong) 0 0), linear-gradient(var(--color-border-strong) 0 0);
+		background-size: 9px 1px, 1px 9px;
+		background-position: center, center;
+		background-repeat: no-repeat;
+	}
+
+	/* Skeletons: a resting block plus a single sweeping highlight. */
+	.skeleton {
+		position: relative;
+		overflow: hidden;
+		border-radius: 0.5rem;
+		background: color-mix(in srgb, var(--color-fg) 9%, transparent);
+	}
+	.skeleton::after {
+		content: '';
+		position: absolute;
+		inset: 0;
+		transform: translateX(-100%);
+		background-image: linear-gradient(90deg, transparent, color-mix(in srgb, var(--color-fg) 9%, transparent), transparent);
+		animation: shimmer 1.6s ease-in-out infinite;
+	}
+	@keyframes shimmer {
+		100% {
+			transform: translateX(100%);
+		}
+	}
+
 	.animate-in {
 		animation: fade-in 0.35s ease both;
 	}
@@ -113,6 +233,13 @@
 		to {
 			opacity: 1;
 			transform: none;
+		}
+	}
+
+	@media (prefers-reduced-motion: reduce) {
+		.skeleton::after,
+		.animate-in {
+			animation: none;
 		}
 	}
 }

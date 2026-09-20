@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { useParams, useNavigate, Link as RouterLink } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient, keepPreviousData } from '@tanstack/react-query';
 import { api, type ClickRecord } from '../lib/api';
-import { Button, Card, Input, Badge, CopyButton, Spinner, EmptyState, ConfirmDialog, cx } from '../components/ui';
+import { Button, Card, Input, Badge, CopyButton, Skeleton, SkeletonChart, SkeletonRows, SkeletonStats, Skeletons, EmptyState, ConfirmDialog, cx } from '../components/ui';
 import { TrendChart, BarList } from '../components/charts';
 import { IconSearch, IconExternal, IconTrash, IconPower, IconChevron, IconGlobe } from '../components/icons';
 import { full, fmtDate, relative, hostOf, uaLabel } from '../lib/format';
@@ -51,7 +51,7 @@ export default function LinkDetail() {
 	});
 
 	if (isError) return <EmptyState title="Link not found" hint="It may have been deleted." />;
-	if (!data) return <div className="grid place-items-center py-24 text-muted"><Spinner className="size-6" /></div>;
+	if (!data) return <LinkDetailSkeleton />;
 
 	const link = data.link;
 	const expired = link.expires_at != null && Date.parse(link.expires_at) <= Date.now();
@@ -68,9 +68,8 @@ export default function LinkDetail() {
 			</div>
 
 			{/* Header card */}
-			<Card className="relative overflow-hidden p-5">
-				<div className="accent-glow pointer-events-none absolute inset-0 opacity-50" />
-				<div className="relative flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+			<Card className="p-5">
+				<div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
 					<div className="min-w-0">
 						<div className="flex items-center gap-2">
 							<a href={data.short_url} target="_blank" rel="noreferrer" className="font-mono text-lg font-semibold text-fg hover:text-accent">
@@ -187,5 +186,23 @@ function RecordRow({ r }: { r: ClickRecord }) {
 			<div className="min-w-0 truncate text-muted" title={r.user_agent}>{uaLabel(r.user_agent)}</div>
 			<div className="min-w-0 truncate text-muted" title={r.referrer}>{r.referrer ? hostOf(r.referrer) : <span className="text-faint">direct</span>}</div>
 		</div>
+	);
+}
+
+/** Mirrors the loaded page: title block, stat row, trend chart, then the click log. */
+function LinkDetailSkeleton() {
+	return (
+		<Skeletons label="Loading link">
+			<div className="mb-6">
+				<Skeleton className="h-3 w-24" />
+				<Skeleton className="mt-3 h-7 w-56" />
+				<Skeleton className="mt-2.5 h-3 w-72" />
+			</div>
+			<SkeletonStats count={4} />
+			<SkeletonChart className="mt-4" />
+			<Card className="mt-4 overflow-hidden">
+				<SkeletonRows rows={6} columns={3} />
+			</Card>
+		</Skeletons>
 	);
 }
