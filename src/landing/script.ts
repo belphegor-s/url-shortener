@@ -1,104 +1,180 @@
-/** Landing page script. Served separately (not inline) so the strict CSP stays
- *  `script-src 'self'` with no nonce/unsafe-inline. Runs early to set the theme
- *  before first paint, then wires up interactions on DOMContentLoaded. */
+/** Public-site script. Served as its own asset (not inline) so the strict CSP stays
+ *  `script-src 'self'` with no nonce and no unsafe-inline. The theme is applied
+ *  synchronously, before first paint; everything else waits for DOMContentLoaded. */
 export const script = String.raw`
 (function () {
   var KEY = 'shrt-theme';
   var root = document.documentElement;
-  function apply(t) { root.setAttribute('data-theme', t); }
-  try {
-    var stored = localStorage.getItem(KEY);
-    if (stored === 'light' || stored === 'dark') apply(stored);
-    else apply(window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark');
-  } catch (e) {
-    apply(window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark');
+
+  function prefersDark() {
+    return window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+  }
+  function apply(theme) {
+    root.setAttribute('data-theme', theme);
+    var meta = document.querySelector('meta[name="theme-color"]:not([media])');
+    if (meta) meta.setAttribute('content', theme === 'dark' ? '#09090b' : '#ffffff');
   }
 
-  document.addEventListener('DOMContentLoaded', function () {
-    var toggle = document.getElementById('theme-toggle');
-    if (toggle) toggle.addEventListener('click', function () {
-      var next = root.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
-      apply(next);
-      try { localStorage.setItem(KEY, next); } catch (e) {}
-    });
+  var stored = null;
+  try { stored = localStorage.getItem(KEY); } catch (e) {}
+  apply(stored === 'light' || stored === 'dark' ? stored : prefersDark() ? 'dark' : 'light');
 
-    var nav = document.getElementById('nav');
-    if (nav) {
-      var onScroll = function () { nav.classList.toggle('scrolled', window.scrollY > 8); };
+  document.addEventListener('DOMContentLoaded', function () {
+    // ---- Theme toggle -----------------------------------------------------
+    var toggle = document.getElementById('theme-toggle');
+    if (toggle) {
+      toggle.addEventListener('click', function () {
+        var next = root.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+        apply(next);
+        try { localStorage.setItem(KEY, next); } catch (e) {}
+      });
+    }
+
+    // ---- Header hairline on scroll ---------------------------------------
+    var header = document.getElementById('site-header');
+    if (header) {
+      var onScroll = function () { header.classList.toggle('is-scrolled', window.scrollY > 4); };
       window.addEventListener('scroll', onScroll, { passive: true });
       onScroll();
     }
 
-    // Copy buttons (static data-copy + the dynamic result button).
+    // ---- Mobile menu ------------------------------------------------------
+    var menuBtn = document.getElementById('menu-toggle');
+    var menu = document.getElementById('mobile-menu');
+    if (menuBtn && menu) {
+      var openIcon = menuBtn.querySelector('.menu-open');
+      var closeIcon = menuBtn.querySelector('.menu-close');
+      var setMenu = function (open) {
+        menu.classList.toggle('is-open', open);
+        menuBtn.setAttribute('aria-expanded', open ? 'true' : 'false');
+        menuBtn.setAttribute('aria-label', open ? 'Close menu' : 'Open menu');
+        if (openIcon) openIcon.hidden = open;
+        if (closeIcon) closeIcon.hidden = !open;
+      };
+      menuBtn.addEventListener('click', function () { setMenu(!menu.classList.contains('is-open')); });
+      menu.addEventListener('click', function (ev) { if (ev.target.closest('a')) setMenu(false); });
+      document.addEventListener('keydown', function (ev) { if (ev.key === 'Escape') setMenu(false); });
+      window.addEventListener('resize', function () { if (window.innerWidth >= 900) setMenu(false); });
+    }
+
+    // ---- Copy buttons (static data-copy plus the dynamic result button) ----
     document.addEventListener('click', function (ev) {
       var btn = ev.target.closest ? ev.target.closest('[data-copy]') : null;
       if (!btn) return;
       var value = btn.getAttribute('data-copy');
       if (!value) return;
+
+      var label = btn.querySelector('span');
       var done = function () {
-        var prev = btn.innerHTML;
-        btn.innerHTML = 'Copied';
-        setTimeout(function () { btn.innerHTML = prev; }, 1400);
+        if (!label) return;
+        var prev = label.textContent;
+        label.textContent = 'Copied';
+        setTimeout(function () { label.textContent = prev; }, 1400);
       };
-      if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(value).then(done, function(){});
-      else {
-        var ta = document.createElement('textarea');
-        ta.value = value; document.body.appendChild(ta); ta.select();
-        try { document.execCommand('copy'); done(); } catch (e) {}
-        document.body.removeChild(ta);
+
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(value).then(done, function () {});
+        return;
       }
+      var ta = document.createElement('textarea');
+      ta.value = value;
+      ta.setAttribute('readonly', '');
+      ta.style.position = 'fixed';
+      ta.style.opacity = '0';
+      document.body.appendChild(ta);
+      ta.select();
+      try { document.execCommand('copy'); done(); } catch (e) {}
+      document.body.removeChild(ta);
     });
 
+    // ---- Docs: highlight the section currently in view ---------------------
+    var docsLinks = [].slice.call(document.querySelectorAll('[data-docs-link]'));
+    if (docsLinks.length && 'IntersectionObserver' in window) {
+      var byId = {};
+      docsLinks.forEach(function (a) { byId[a.getAttribute('data-docs-link')] = a; });
+      var setActive = function (id) {
+        docsLinks.forEach(function (a) { a.classList.toggle('is-active', a === byId[id]); });
+      };
+      var observer = new IntersectionObserver(
+        function (entries) {
+          var visible = entries.filter(function (e) { return e.isIntersecting; });
+          if (visible.length) setActive(visible[0].target.id);
+        },
+        { rootMargin: '-25% 0px -65% 0px', threshold: 0 }
+      );
+      Object.keys(byId).forEach(function (id) {
+        var el = document.getElementById(id);
+        if (el) observer.observe(el);
+      });
+      setActive(docsLinks[0].getAttribute('data-docs-link'));
+    }
+
+    // ---- Inline shortener --------------------------------------------------
     var form = document.getElementById('shorten');
     if (!form) return;
+
     var authed = document.body.getAttribute('data-authed') === 'true';
     var csrf = document.body.getAttribute('data-csrf') || '';
     var input = document.getElementById('url');
-    var btn = form.querySelector('button[type="submit"]');
+    var submit = form.querySelector('button[type="submit"]');
     var result = document.getElementById('result');
     var resultLink = document.getElementById('result-link');
     var copyBtn = document.getElementById('copy-btn');
     var formError = document.getElementById('form-error');
 
-    function showError(msg) {
+    function showError(message) {
       if (!formError) return;
-      formError.textContent = msg;
+      formError.textContent = message;
       formError.hidden = false;
     }
-    function hideError() { if (formError) formError.hidden = true; }
 
-    form.addEventListener('submit', function (e) {
-      e.preventDefault();
+    form.addEventListener('submit', function (ev) {
+      ev.preventDefault();
       var url = (input.value || '').trim();
       if (!url) { input.focus(); return; }
-      hideError();
+      if (formError) formError.hidden = true;
 
+      // Signed out: bounce through GitHub and come back with the URL prefilled.
       if (!authed) {
-        var next = '/links?new=' + encodeURIComponent(url);
+        var next = '/?new=' + encodeURIComponent(url);
         window.location.href = '/auth/github?next=' + encodeURIComponent(next);
         return;
       }
 
-      var label = btn.innerHTML;
-      btn.disabled = true;
-      btn.innerHTML = 'Shortening…';
+      var label = submit.innerHTML;
+      submit.disabled = true;
+      submit.textContent = 'Shortening';
+
       fetch('/api/links', {
         method: 'POST',
         credentials: 'same-origin',
         headers: { 'content-type': 'application/json', 'x-csrf-token': csrf },
         body: JSON.stringify({ url: url })
       })
-        .then(function (r) { return r.json().then(function (d) { if (!r.ok) throw new Error(d.error || 'Could not shorten that URL'); return d; }); })
+        .then(function (r) {
+          return r.json().then(function (d) {
+            if (!r.ok) throw new Error(d.error || 'Could not shorten that URL');
+            return d;
+          });
+        })
         .then(function (d) {
           resultLink.href = d.short_url;
           resultLink.textContent = d.short_url;
           if (copyBtn) copyBtn.setAttribute('data-copy', d.short_url);
-          result.classList.add('show');
+          result.classList.add('is-visible');
           input.value = '';
         })
         .catch(function (err) { showError(err.message || 'Something went wrong'); })
-        .then(function () { btn.disabled = false; btn.innerHTML = label; });
+        .then(function () { submit.disabled = false; submit.innerHTML = label; });
     });
+
+    // Prefill and submit a URL carried back from the sign-in round trip.
+    var pending = new URLSearchParams(window.location.search).get('new');
+    if (pending && authed) {
+      input.value = pending;
+      history.replaceState(null, '', window.location.pathname);
+      form.dispatchEvent(new Event('submit', { cancelable: true }));
+    }
   });
 })();
 `;

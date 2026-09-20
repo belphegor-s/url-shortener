@@ -1,6 +1,6 @@
-import type { SwaggerUIOptions } from '@hono/swagger-ui';
-
-export const spec: SwaggerUIOptions['spec'] = {
+/** OpenAPI 3.1 description of the public API. Served verbatim at `/openapi.json`
+ *  and mirrored by the hand-built reference at `/docs`. */
+export const spec = {
 	openapi: '3.1.0',
 	info: {
 		title: 'SHRT API',

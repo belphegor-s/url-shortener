@@ -27,7 +27,6 @@
 		"wrangler": "4.100.0"
 	},
 	"dependencies": {
-		"@hono/swagger-ui": "^0.6.1",
 		"hono": "^4.13.8",
 		"nanoid": "^5.1.16",
 		"workers-og": "^0.0.27"

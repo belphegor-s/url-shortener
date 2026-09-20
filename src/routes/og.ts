@@ -11,7 +11,7 @@ const HEADERS = {
 	'cache-control': 'public, max-age=86400, s-maxage=604800, immutable',
 };
 
-const HEADLINE_TEXT = 'SHRTShort links, long reach.Fast, private URL shortening with edge analytics.1200';
+const HEADLINE_TEXT = 'SHRTShort links, long reach.Open-source URL shortening with edge analytics.short.procd.cc';
 
 /** Branded social card, rendered on the fly and cached in KV. */
 og.get('/og.png', async (c) => {
@@ -20,18 +20,19 @@ og.get('/og.png', async (c) => {
 
 	try {
 		const font = await loadGoogleFont({ family: 'Inter', weight: 700, text: HEADLINE_TEXT });
+		// Mirrors the site's dark theme: zinc canvas, faint grid, monochrome type.
 		const card =
-			'<div style="display:flex;flex-direction:column;width:1200px;height:630px;background-color:#060608;position:relative;overflow:hidden;padding:72px;font-family:Inter;">' +
-			'<div style="display:flex;position:absolute;top:-240px;left:-160px;width:760px;height:760px;border-radius:9999px;background-image:linear-gradient(135deg, rgba(124,92,255,0.6), rgba(124,92,255,0));"></div>' +
-			'<div style="display:flex;position:absolute;bottom:-260px;right:-180px;width:720px;height:720px;border-radius:9999px;background-image:linear-gradient(135deg, rgba(52,211,238,0.42), rgba(52,211,238,0));"></div>' +
-			'<div style="display:flex;align-items:center;gap:18px;position:relative;">' +
-			'<div style="display:flex;align-items:center;justify-content:center;width:66px;height:66px;border-radius:18px;background-image:linear-gradient(135deg,#7c5cff,#34d3ee);color:#ffffff;font-size:42px;font-weight:700;">S</div>' +
-			'<div style="display:flex;font-size:36px;font-weight:700;color:#f5f5f7;letter-spacing:-1px;">SHRT</div>' +
+			'<div style="display:flex;flex-direction:column;width:1200px;height:630px;background-color:#09090b;position:relative;overflow:hidden;padding:80px;font-family:Inter;">' +
+			'<div style="display:flex;position:absolute;top:0;left:0;width:1200px;height:630px;background-image:linear-gradient(90deg,rgba(250,250,250,0.05) 1px,transparent 1px),linear-gradient(180deg,rgba(250,250,250,0.05) 1px,transparent 1px);background-size:56px 56px;"></div>' +
+			'<div style="display:flex;position:absolute;top:-220px;left:-160px;width:700px;height:700px;border-radius:9999px;background-image:linear-gradient(135deg, rgba(124,92,255,0.34), rgba(9,9,11,0));"></div>' +
+			'<div style="display:flex;align-items:center;position:relative;">' +
+			'<div style="display:flex;align-items:center;justify-content:center;width:56px;height:56px;border-radius:16px;background-image:linear-gradient(135deg,#7c5cff,#34d3ee);color:#ffffff;font-size:32px;font-weight:700;">S</div>' +
+			'<div style="display:flex;margin-left:16px;font-size:30px;font-weight:700;color:#fafafa;letter-spacing:-0.5px;">SHRT</div>' +
 			'</div>' +
 			'<div style="display:flex;flex-direction:column;margin-top:auto;position:relative;">' +
-			'<div style="display:flex;font-size:94px;font-weight:700;color:#f5f5f7;letter-spacing:-3px;line-height:1.02;">Short links,</div>' +
-			'<div style="display:flex;font-size:94px;font-weight:700;letter-spacing:-3px;line-height:1.06;color:#7c5cff;">long reach.</div>' +
-			'<div style="display:flex;margin-top:28px;font-size:30px;color:#a4a4b0;">Fast, private URL shortening with edge analytics.</div>' +
+			'<div style="display:flex;font-size:92px;font-weight:700;color:#fafafa;letter-spacing:-4px;line-height:1.04;">Short links,</div>' +
+			'<div style="display:flex;font-size:92px;font-weight:700;color:#71717a;letter-spacing:-4px;line-height:1.08;">long reach.</div>' +
+			'<div style="display:flex;margin-top:32px;font-size:28px;color:#a1a1aa;">Open-source URL shortening with edge analytics.</div>' +
 			'</div>' +
 			'</div>';
 

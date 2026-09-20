@@ -3,8 +3,11 @@ import type { Context } from 'hono';
 import type { AppEnv } from '../types';
 import { getSession, parseCookies, SESSION_COOKIE } from '../lib/session';
 import { getUser } from '../lib/users';
+import { REPO_URL } from '../landing/chrome';
 import { renderLanding } from '../landing/page';
+import { renderDocs } from '../landing/docs';
 import { script } from '../landing/script';
+import { spec } from '../openapi/spec';
 
 export const home = new Hono<AppEnv>();
 
@@ -26,12 +29,28 @@ home.get('/', async (c) => {
 		user,
 		csrf,
 		authError: c.req.query('auth_error'),
-		repoUrl: 'https://github.com/belphegor-s/url-shortener',
+		repoUrl: REPO_URL,
 	});
 	return c.html(html);
 });
 
-// The landing script is served as its own asset so the page can keep a strict CSP
+// Server-rendered API reference. Replaces the third-party Swagger UI bundle so the
+// docs share the site's design system and keep the same strict CSP.
+home.get('/docs', async (c) => {
+	const { user, csrf } = await currentUser(c);
+	const origin = new URL(c.req.url).origin;
+	return c.html(renderDocs({ origin, baseUrl: c.env.SHORT_DOMAIN || origin, user, csrf }));
+});
+
+// Machine-readable description of the same API, for client generators and Postman.
+home.get('/openapi.json', (c) =>
+	c.body(JSON.stringify(spec), 200, {
+		'content-type': 'application/json; charset=utf-8',
+		'cache-control': 'public, max-age=3600',
+	})
+);
+
+// The public-site script is served as its own asset so the page can keep a strict CSP
 // (`script-src 'self'`) without nonces or inline scripts.
 home.get('/landing.js', (c) =>
 	c.body(script, 200, {
@@ -68,8 +87,8 @@ home.get('/manifest.webmanifest', (c) =>
 			description: 'Short links, long reach.',
 			start_url: '/',
 			display: 'standalone',
-			background_color: '#060608',
-			theme_color: '#060608',
+			background_color: '#09090b',
+			theme_color: '#09090b',
 			icons: [
 				{ src: '/favicon.svg', sizes: 'any', type: 'image/svg+xml', purpose: 'any' },
 				{ src: '/icon-192.png', sizes: '192x192', type: 'image/png', purpose: 'any' },

@@ -1,15 +1,5 @@
-import type { User } from '../types';
-import { icon } from './icons';
-import { styles } from './styles';
-
-/** HTML-escape untrusted values interpolated into the page. */
-const esc = (value: unknown): string =>
-	String(value ?? '')
-		.replace(/&/g, '&amp;')
-		.replace(/</g, '&lt;')
-		.replace(/>/g, '&gt;')
-		.replace(/"/g, '&quot;')
-		.replace(/'/g, '&#39;');
+import { esc, renderPage, REPO_URL, type NavLink } from './chrome';
+import { icon, type IconName } from './icons';
 
 export interface LandingOptions {
 	/** Request origin, e.g. https://short.procd.cc */
@@ -17,7 +7,7 @@ export interface LandingOptions {
 	/** Public base used to display short URLs. */
 	baseUrl: string;
 	/** Signed-in user, or null. */
-	user: User | null;
+	user: import('../types').User | null;
 	/** Synchronizer CSRF token, present when signed in. */
 	csrf?: string;
 	/** Optional auth error code to surface. */
@@ -34,220 +24,178 @@ const AUTH_ERRORS: Record<string, string> = {
 
 const TITLE = 'SHRT — Short links, long reach';
 const DESCRIPTION =
-	'SHRT is a blazing-fast URL shortener with edge redirects, custom codes, link expiry, and privacy-friendly click analytics. Sign in with GitHub and start shortening in seconds.';
+	'SHRT is an open-source URL shortener on Cloudflare Workers: edge redirects, custom codes, link expiry and privacy-friendly click analytics. Sign in with GitHub and start shortening in seconds.';
+
+export const LANDING_NAV: NavLink[] = [
+	{ href: '/#features', label: 'Features' },
+	{ href: '/#how-it-works', label: 'How it works' },
+	{ href: '/#analytics', label: 'Analytics' },
+	{ href: '/docs', label: 'API docs' },
+];
 
 export function renderLanding(o: LandingOptions): string {
 	const authed = !!o.user;
-	const repo = o.repoUrl ?? 'https://github.com/belphegor-s/url-shortener';
-	const errorMsg = o.authError ? AUTH_ERRORS[o.authError] ?? 'Sign-in failed. Please try again.' : null;
+	const repo = o.repoUrl ?? REPO_URL;
+	const errorMsg = o.authError ? (AUTH_ERRORS[o.authError] ?? 'Sign-in failed. Please try again.') : null;
 
-	const accountButton = authed
-		? `<a class="btn btn-primary btn-sm" href="/dashboard">Dashboard ${icon('arrow', { size: 16 })}</a>
-		   ${o.user?.avatarUrl ? `<img class="avatar" src="${esc(o.user.avatarUrl)}" alt="" width="30" height="30" referrerpolicy="no-referrer" />` : ''}`
-		: `<a class="btn btn-sm" href="/auth/github">${icon('github', { size: 16, filled: true })} Sign in</a>`;
+	const submitLabel = authed
+		? `Shorten ${icon('arrow', { size: 15 })}`
+		: `${icon('github', { size: 15, filled: true })} Continue with GitHub`;
 
-	const shortenButton = authed
-		? `<button class="btn btn-primary" type="submit">Shorten ${icon('arrow', { size: 17 })}</button>`
-		: `<button class="btn btn-primary" type="submit">${icon('github', { size: 17, filled: true })} Continue with GitHub</button>`;
+	const hint = authed
+		? `${icon('check', { size: 14 })} Signed in as <strong>@${esc(o.user?.login)}</strong>. Links stay private to your account.`
+		: `${icon('lock', { size: 14 })} Free with GitHub. No password, no email list, no third-party trackers.`;
 
-	const shortenHint = authed
-		? `${icon('check', { size: 14 })} Signed in as <strong>@${esc(o.user?.login)}</strong> · your links stay private to your account`
-		: `${icon('lock', { size: 14 })} Free with GitHub · no password, no email, no tracking beyond link analytics`;
+	const content = `<main>
+  <section class="container hero">
+    <span class="badge"><span class="pulse"></span> Open source, self-hostable, running on Cloudflare Workers</span>
+    <h1>Short links,<br /><span class="dim">long reach.</span></h1>
+    <p class="lead">SHRT turns sprawling URLs into crisp, shareable links served from the edge, with per-click analytics that respect the people clicking them.</p>
 
-	const jsonLd = JSON.stringify({
-		'@context': 'https://schema.org',
-		'@type': 'WebApplication',
-		name: 'SHRT',
-		applicationCategory: 'UtilitiesApplication',
-		operatingSystem: 'Web',
-		description: DESCRIPTION,
-		url: o.origin,
-		offers: { '@type': 'Offer', price: '0', priceCurrency: 'USD' },
-	});
-
-	return `<!doctype html>
-<html lang="en" data-theme="dark">
-<head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-<title>${esc(TITLE)}</title>
-<meta name="description" content="${esc(DESCRIPTION)}" />
-<link rel="canonical" href="${esc(o.origin)}/" />
-<meta name="robots" content="index, follow" />
-<meta name="theme-color" content="#060608" media="(prefers-color-scheme: dark)" />
-<meta name="theme-color" content="#fbfbfe" media="(prefers-color-scheme: light)" />
-<meta name="color-scheme" content="dark light" />
-<meta property="og:type" content="website" />
-<meta property="og:site_name" content="SHRT" />
-<meta property="og:title" content="${esc(TITLE)}" />
-<meta property="og:description" content="${esc(DESCRIPTION)}" />
-<meta property="og:url" content="${esc(o.origin)}/" />
-<meta property="og:image" content="${esc(o.origin)}/og.png" />
-<meta property="og:image:width" content="1200" />
-<meta property="og:image:height" content="630" />
-<meta property="og:image:alt" content="SHRT — Short links, long reach." />
-<meta name="twitter:card" content="summary_large_image" />
-<meta name="twitter:title" content="${esc(TITLE)}" />
-<meta name="twitter:description" content="${esc(DESCRIPTION)}" />
-<meta name="twitter:image" content="${esc(o.origin)}/og.png" />
-<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-<link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png" />
-<link rel="icon" type="image/png" sizes="16x16" href="/favicon-16.png" />
-<link rel="apple-touch-icon" href="/apple-touch-icon.png" />
-<link rel="manifest" href="/manifest.webmanifest" />
-<link rel="preconnect" href="https://fonts.googleapis.com" />
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
-<script type="application/ld+json">${jsonLd}</script>
-<script src="/landing.js"></script>
-<style>${styles}</style>
-</head>
-<body data-authed="${authed ? 'true' : 'false'}" data-csrf="${esc(o.csrf ?? '')}">
-<div class="backdrop"><span class="glow glow-a"></span><span class="glow glow-b"></span><span class="glow glow-c"></span></div>
-
-<header class="nav" id="nav">
-  <div class="wrap nav-inner">
-    <a class="brand" href="/">
-      <span class="logo">${icon('link', { size: 18 })}</span>
-      <span class="word">SHRT</span>
-      <span class="tag hide-sm">url shortener</span>
-    </a>
-    <nav class="links" aria-label="Primary">
-      <a href="#features">Features</a>
-      <a href="#how">How it works</a>
-      <a href="#analytics">Analytics</a>
-      <a href="/docs">API docs</a>
-    </nav>
-    <div class="nav-actions">
-      <button class="btn btn-ghost btn-icon" id="theme-toggle" type="button" aria-label="Toggle theme" title="Toggle theme">
-        <span class="hide-dark">${icon('moon', { size: 18 })}</span>
-        <span class="hide-light">${icon('sun', { size: 18 })}</span>
-      </button>
-      ${accountButton}
-    </div>
-  </div>
-</header>
-
-<main>
-  <section class="hero wrap" style="padding-bottom:24px">
-    <span class="eyebrow"><span class="dot">${icon('spark', { size: 11 })}</span> Edge-native · runs on Cloudflare Workers</span>
-    <h1 class="title">Short links,<br /><span class="grad">long reach.</span></h1>
-    <p class="lede">SHRT turns sprawling URLs into crisp, shareable links — served from 300+ edge locations with per-click analytics that respect your visitors. Sign in with GitHub and shorten your first link in seconds.</p>
-
-    ${errorMsg ? `<div class="auth-error">${esc(errorMsg)}</div>` : ''}
+    ${errorMsg ? `<div class="alert">${esc(errorMsg)}</div>` : ''}
 
     <form class="shorten" id="shorten" novalidate>
       <div class="shorten-row">
-        <label class="shorten-input">
-          ${icon('link', { size: 18 })}
-          <input id="url" name="url" type="url" inputmode="url" autocomplete="off" spellcheck="false" placeholder="Paste a long URL, e.g. https://example.com/very/long/path" aria-label="URL to shorten" required />
+        <label class="field">
+          ${icon('link', { size: 16 })}
+          <input id="url" name="url" type="url" inputmode="url" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="https://example.com/a/very/long/path" aria-label="URL to shorten" required />
         </label>
-        ${shortenButton}
+        <button class="btn btn-primary" type="submit">${submitLabel}</button>
       </div>
-      <div class="shorten-hint">${shortenHint}</div>
-      <div class="auth-error" id="form-error" role="alert" hidden></div>
+      <p class="shorten-hint">${hint}</p>
+      <div class="alert" id="form-error" role="alert" hidden></div>
       <div class="result" id="result" role="status" aria-live="polite">
-        <a id="result-link" href="#" target="_blank" rel="noreferrer"></a>
-        <button class="btn btn-sm copy" type="button" id="copy-btn" data-copy="">${icon('copy', { size: 15 })} Copy</button>
+        <a id="result-link" href="#" target="_blank" rel="noreferrer noopener"></a>
+        <button class="btn btn-outline btn-sm" type="button" id="copy-btn" data-copy="">${icon('copy', { size: 14 })} <span>Copy</span></button>
       </div>
     </form>
   </section>
 
-  <section id="features" class="wrap">
-    <div class="sec-head">
-      <div class="kicker">Everything you need</div>
-      <h2>Built for links that actually go places.</h2>
-      <p>No bloated dashboards, no tracking scripts. Just fast redirects and the numbers that tell you what's working.</p>
-    </div>
-    <div class="cards">
-      ${featureCard('bolt', 'Edge-fast redirects', 'Every short link resolves at the nearest Cloudflare edge location, with a read-through KV cache so the hot path never waits on the database.')}
-      ${featureCard('chart', 'Click analytics', 'Clicks, countries, referrers, devices and a 30-day trend — per link and across your account.')}
-      ${featureCard('link', 'Custom short codes', 'Claim memorable slugs like <code>/launch</code> or <code>/me</code>. Reserved routes are always protected.')}
-      ${featureCard('clock', 'Expiring links', 'Set a link to expire after a set time. Expired links return a clean 410 Gone instead of a dead redirect.')}
-      ${featureCard('github', 'GitHub sign-in', 'One click with GitHub — no passwords to forget. Your links are private to your account.')}
-      ${featureCard('code', 'Open API', 'Create and manage links programmatically with a bearer token. Interactive docs are always a click away.')}
+  <section class="container" style="padding-bottom:1rem">
+    <div class="grid-4">
+      ${stat('300+', 'edge locations serving redirects')}
+      ${stat('&lt;30ms', 'typical warm redirect latency')}
+      ${stat('100%', 'self-hosted on your own account')}
+      ${stat('0', 'third-party tracking scripts')}
     </div>
   </section>
 
-  <section id="how" class="wrap">
-    <div class="sec-head">
-      <div class="kicker">How it works</div>
+  <section class="container section" id="features">
+    <div class="section-head">
+      <p class="eyebrow">Features</p>
+      <h2>Everything a link needs. Nothing it does not.</h2>
+      <p>No bloated dashboard, no cookie banner, no marketing pixels. Fast redirects and the numbers that tell you what is working.</p>
+    </div>
+    <div class="grid-3">
+      ${feature('bolt', 'Edge-fast redirects', 'Every short link resolves at the nearest Cloudflare location, with a read-through KV cache so the hot path never waits on the database.')}
+      ${feature('chart', 'Click analytics', 'Clicks, countries, referrers and a 30-day trend, per link and across your whole account.')}
+      ${feature('link', 'Custom short codes', 'Claim memorable slugs like <code>/launch</code> or <code>/me</code>. Reserved routes are always protected.')}
+      ${feature('clock', 'Expiring links', 'Give a link a lifetime. Once it lapses it returns a clean <code>410 Gone</code> instead of a dead redirect.')}
+      ${feature('key', 'Per-account API keys', 'Create and revoke scoped keys from the dashboard. There is no shared global secret to leak.')}
+      ${feature('shield', 'Hardened by default', 'Hashed session tokens, <code>__Host-</code> cookies, CSRF synchronizer tokens, rate limiting and a strict CSP.')}
+    </div>
+  </section>
+
+  <section class="container section" id="how-it-works">
+    <div class="section-head">
+      <p class="eyebrow">How it works</p>
       <h2>Three steps. About ten seconds.</h2>
     </div>
-    <div class="steps">
-      <div class="step"><div class="n">1</div><h3>Sign in with GitHub</h3><p>Authenticate in one click. We only read your public profile and primary email — nothing else.</p></div>
-      <div class="step"><div class="n">2</div><h3>Paste your URL</h3><p>Drop in any http(s) link and optionally claim a custom code or set an expiry.</p></div>
-      <div class="step"><div class="n">3</div><h3>Share and measure</h3><p>Send your short link anywhere. Watch clicks, countries and referrers roll in live.</p></div>
+    <div class="grid-3">
+      ${step(1, 'Sign in with GitHub', 'One click, no password. SHRT reads your public profile and primary email, and nothing else.')}
+      ${step(2, 'Paste your URL', 'Drop in any http or https link. Optionally claim a custom code or set an expiry.')}
+      ${step(3, 'Share and measure', 'Send the short link anywhere and watch clicks, countries and referrers arrive live.')}
     </div>
   </section>
 
-  <section id="analytics" class="wrap">
+  <section class="container section" id="analytics">
     <div class="split">
-      <div class="prose">
-        <div class="kicker">Analytics that respect people</div>
-        <h2>Know what works — without spying on anyone.</h2>
-        <p>SHRT records the essentials for understanding traffic, never more. Data stays in your own Cloudflare account, on your own database.</p>
+      <div>
+        <p class="eyebrow">Analytics</p>
+        <h2 style="margin-top:0.75rem;font-size:clamp(1.625rem,4vw,2.25rem);letter-spacing:-0.035em">Know what works without spying on anyone.</h2>
+        <p style="margin-top:0.875rem;color:var(--muted-foreground);line-height:1.65">SHRT records the essentials for understanding traffic and stops there. The data lives in your own Cloudflare account, in your own D1 database.</p>
         <ul class="checks">
-          <li><span class="tick">${icon('check', { size: 12 })}</span> Per-link clicks with first &amp; last seen</li>
-          <li><span class="tick">${icon('check', { size: 12 })}</span> Country and referrer breakdowns</li>
-          <li><span class="tick">${icon('check', { size: 12 })}</span> 30-day click trend, per link or account-wide</li>
-          <li><span class="tick">${icon('check', { size: 12 })}</span> Session control — revoke any device instantly</li>
+          <li><span class="tick">${icon('check', { size: 11 })}</span> Per-link clicks with first and last seen</li>
+          <li><span class="tick">${icon('check', { size: 11 })}</span> Country and referrer breakdowns</li>
+          <li><span class="tick">${icon('check', { size: 11 })}</span> 30-day click trend, per link or account-wide</li>
+          <li><span class="tick">${icon('check', { size: 11 })}</span> Session control, revoke any device instantly</li>
         </ul>
+        <a class="btn btn-outline btn-sm" style="margin-top:1.5rem" href="/docs">${icon('book', { size: 15 })} Read the API reference</a>
       </div>
-      <div class="code-wrap">
-        <div class="code-top"><span class="b"></span><span class="b"></span><span class="b"></span><span class="name">create-link.sh</span><button class="btn btn-sm copy" type="button" data-copy="curl -X POST ${esc(o.baseUrl)}/create -H &quot;Authorization: Bearer $SHRT_API_KEY&quot; -H &quot;content-type: application/json&quot; -d '{&quot;url&quot;:&quot;https://example.com&quot;}'">${icon('copy', { size: 14 })} Copy</button></div>
-        <pre class="code"><span class="c"># Programmatic access with your account API key</span>
-<span class="f">curl</span> -X POST <span class="s">${esc(o.baseUrl)}/create</span> \\
-  -H <span class="s">"Authorization: Bearer $SHRT_API_KEY"</span> \\
-  -H <span class="s">"content-type: application/json"</span> \\
-  -d <span class="s">'{"url":"https://example.com"}'</span>
-
-<span class="c"># → 201 Created</span>
-{
-  <span class="k">"short_url"</span>: <span class="s">"${esc(o.baseUrl)}/aB3xK9q"</span>,
-  <span class="k">"id"</span>: <span class="s">"aB3xK9q"</span>
-}</pre>
-      </div>
+      ${codeCard(o.baseUrl)}
     </div>
   </section>
 
-  <section class="wrap">
-    <div class="stats">
-      <div class="stat"><div class="v"><span class="u">300+</span></div><div class="l">edge locations serving redirects</div></div>
-      <div class="stat"><div class="v">&lt;30<span class="u">ms</span></div><div class="l">typical warm redirect latency</div></div>
-      <div class="stat"><div class="v"><span class="u">100%</span></div><div class="l">self-hosted on your Cloudflare account</div></div>
-      <div class="stat"><div class="v"><span class="u">0</span></div><div class="l">tracking scripts or third-party pixels</div></div>
-    </div>
-  </section>
-
-  <section class="wrap">
-    <div class="cta">
-      <h2>Ready to make every link count?</h2>
-      <p>Sign in with GitHub and create your first short link in seconds. Free, fast, and yours.</p>
+  <section class="container section" id="open-source">
+    <div class="card cta">
+      <h2>${authed ? 'Your links are waiting.' : 'Ready to make every link count?'}</h2>
+      <p>${authed ? 'Jump back into the dashboard, or read the API reference to automate the boring parts.' : 'Sign in with GitHub and create your first short link in seconds. Free, fast, and entirely yours.'}</p>
       <div class="row">
-        <a class="btn btn-primary" href="${authed ? '/dashboard' : '/auth/github'}">${icon('github', { size: 18, filled: true })} ${authed ? 'Open dashboard' : 'Get started with GitHub'}</a>
-        <a class="btn" href="/docs">${icon('code', { size: 17 })} Read the API docs</a>
+        <a class="btn btn-primary btn-lg" href="${authed ? '/dashboard' : '/auth/github'}">${icon('github', { size: 16, filled: true })} ${authed ? 'Open dashboard' : 'Get started with GitHub'}</a>
+        <a class="btn btn-outline btn-lg" href="${esc(repo)}" target="_blank" rel="noreferrer noopener">${icon('code', { size: 16 })} Read the source ${icon('external', { size: 13 })}</a>
       </div>
+      <p style="margin-top:1.5rem;font-size:0.8125rem">MIT licensed. Deploy your own copy in a few minutes.</p>
     </div>
   </section>
-</main>
+</main>`;
 
-<footer>
-  <div class="wrap foot">
-    <div class="brand"><span class="logo">${icon('link', { size: 18 })}</span><span><span class="word">SHRT</span><span class="tag">url shortener</span></span></div>
-    <div class="foot-links">
-      <a href="#features">Features</a>
-      <a href="/docs">API docs</a>
-      <a href="${esc(repo)}" target="_blank" rel="noreferrer">Source</a>
-      <a href="/dashboard">Dashboard</a>
-    </div>
-    <p>© ${new Date().getFullYear()} SHRT · Built on Cloudflare Workers, D1 &amp; KV.</p>
-  </div>
-</footer>
-</body>
-</html>`;
+	return renderPage({
+		origin: o.origin,
+		user: o.user,
+		csrf: o.csrf,
+		title: TITLE,
+		description: DESCRIPTION,
+		canonical: `${o.origin}/`,
+		nav: LANDING_NAV,
+		content,
+		bodyAttrs: `data-authed="${authed ? 'true' : 'false'}" data-csrf="${esc(o.csrf ?? '')}"`,
+		jsonLd: {
+			'@context': 'https://schema.org',
+			'@type': 'WebApplication',
+			name: 'SHRT',
+			applicationCategory: 'UtilitiesApplication',
+			operatingSystem: 'Web',
+			description: DESCRIPTION,
+			url: o.origin,
+			license: 'https://opensource.org/licenses/MIT',
+			codeRepository: repo,
+			offers: { '@type': 'Offer', price: '0', priceCurrency: 'USD' },
+		},
+	});
 }
 
-function featureCard(name: Parameters<typeof icon>[0], title: string, body: string): string {
-	return `<div class="card"><div class="ico">${icon(name, { size: 20 })}</div><h3>${title}</h3><p>${body}</p></div>`;
+const stat = (value: string, label: string): string => `<div class="card stat"><div class="v">${value}</div><div class="l">${label}</div></div>`;
+
+const feature = (name: IconName, title: string, body: string): string =>
+	`<div class="card feature"><div class="icon">${icon(name, { size: 17 })}</div><h3>${title}</h3><p>${body}</p></div>`;
+
+const step = (n: number, title: string, body: string): string =>
+	`<div class="card step"><div class="n">${n}</div><h3>${title}</h3><p>${body}</p></div>`;
+
+function codeCard(baseUrl: string): string {
+	const snippet =
+		`curl -X POST ${baseUrl}/create \\\n` +
+		`  -H "Authorization: Bearer $SHRT_API_KEY" \\\n` +
+		`  -H "content-type: application/json" \\\n` +
+		`  -d '{"url":"https://example.com"}'`;
+
+	return `<div class="card code-card">
+  <div class="code-head">
+    ${icon('terminal', { size: 15 })}
+    <span class="name">create-link.sh</span>
+    <button class="btn btn-ghost btn-sm" type="button" data-copy="${esc(snippet)}">${icon('copy', { size: 14 })} <span>Copy</span></button>
+  </div>
+  <pre class="code"><span class="cm"># Create a link with an account API key</span>
+<span class="fn">curl</span> -X POST <span class="st">${esc(baseUrl)}/create</span> \\
+  -H <span class="st">"Authorization: Bearer $SHRT_API_KEY"</span> \\
+  -H <span class="st">"content-type: application/json"</span> \\
+  -d <span class="st">'{"url":"https://example.com"}'</span>
+
+<span class="cm"># 201 Created</span>
+{
+  <span class="ky">"short_url"</span>: <span class="st">"${esc(baseUrl)}/aB3xK9q"</span>,
+  <span class="ky">"id"</span>: <span class="st">"aB3xK9q"</span>,
+  <span class="ky">"expires_at"</span>: <span class="ky">null</span>
+}</pre>
+</div>`;
 }

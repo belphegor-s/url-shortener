@@ -1,9 +1,7 @@
 import { Hono } from 'hono';
 import { cors } from 'hono/cors';
-import { swaggerUI } from '@hono/swagger-ui';
 
 import type { AppEnv } from './types';
-import { spec } from './openapi/spec';
 import { fail } from './lib/responses';
 import { securityHeaders } from './lib/security';
 import { home } from './routes/home';
@@ -58,9 +56,6 @@ app.route('/', auth);
 
 // Dashboard SPA (static) served under /dashboard.
 app.route('/', dashboard);
-
-// Swagger UI for the public API.
-app.get('/docs', swaggerUI({ spec, urls: [], title: 'SHRT API' }));
 
 // Dashboard JSON API (sessions).
 app.route('/', api);
