@@ -62,7 +62,7 @@ test/                 Vitest (pool-workers) suite
 
 - A Cloudflare Workers account
 - [D1](https://developers.cloudflare.com/d1) database + [KV](https://developers.cloudflare.com/kv) namespace
-- Node.js 20+
+- Node.js 22+ (Wrangler 4 minimum). CI and `.nvmrc` use Node 24 LTS.
 - A GitHub account (to create an OAuth App)
 
 ### 1. Clone & install

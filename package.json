@@ -2,6 +2,9 @@
 	"name": "url-shortner",
 	"version": "0.0.0",
 	"private": true,
+	"engines": {
+		"node": ">=22"
+	},
 	"scripts": {
 		"predeploy": "npm run build:admin",
 		"deploy": "wrangler deploy",
