@@ -1,4 +1,4 @@
--- GitHub-backed user accounts. Identity is anchored on github_id (stable, numeric) —
+-- GitHub-backed user accounts. Identity is anchored on github_id (stable, numeric) -
 -- login/email can change and must never be the primary key.
 CREATE TABLE IF NOT EXISTS users (
   id TEXT PRIMARY KEY,             -- internal id (random, opaque)

@@ -78,6 +78,6 @@ export async function resolveApiKey(env: Bindings, raw: string): Promise<{ user:
 	return { user, keyId };
 }
 
-/** Stamp last-used — call via waitUntil. */
+/** Stamp last-used - call via waitUntil. */
 export const touchApiKey = (env: Bindings, keyId: string): Promise<unknown> =>
 	env.DB.prepare(`UPDATE api_keys SET last_used_at = ? WHERE id = ?`).bind(Date.now(), keyId).run();

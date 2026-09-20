@@ -1,7 +1,7 @@
 /** Hero background: slowly drifting topographic contour lines, drawn on a WebGL
  *  canvas behind the hero copy.
  *
- *  The field comes from `webgl-noise` — 3D simplex noise by Ian McEwan and Stefan
+ *  The field comes from `webgl-noise` - 3D simplex noise by Ian McEwan and Stefan
  *  Gustavson (Ashima Arts), MIT licensed, vendored below with its notice intact:
  *  https://github.com/ashima/webgl-noise. The contouring and the rest of the sketch
  *  are this project's own.
@@ -11,7 +11,7 @@
  *  it. It honours `prefers-reduced-motion` by painting a single frame, and stops
  *  animating whenever it scrolls out of view or the tab is hidden. */
 
-export const CREDIT = 'Contour field built on webgl-noise — simplex noise by Ian McEwan & Stefan Gustavson (Ashima Arts), MIT licensed';
+export const CREDIT = 'Contour field built on webgl-noise - simplex noise by Ian McEwan & Stefan Gustavson (Ashima Arts), MIT licensed';
 
 export const NOISE_REPO = 'https://github.com/ashima/webgl-noise';
 

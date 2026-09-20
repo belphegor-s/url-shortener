@@ -1,4 +1,4 @@
-# SHRT — URL Shortener with Edge Analytics
+# SHRT - URL Shortener with Edge Analytics
 
 [![CI](https://github.com/belphegor-s/url-shortener/actions/workflows/ci.yml/badge.svg)](https://github.com/belphegor-s/url-shortener/actions/workflows/ci.yml)
 [![Deploy](https://github.com/belphegor-s/url-shortener/actions/workflows/deploy.yml/badge.svg)](https://github.com/belphegor-s/url-shortener/actions/workflows/deploy.yml)
@@ -52,8 +52,8 @@ test/                 Vitest (pool-workers) suite
 | `/auth/github` → `/auth/github/callback` | GitHub OAuth flow |
 | `/dashboard` | React dashboard (Overview, Links, per-link analytics, Sessions, Users*) |
 | `/api/*` | Dashboard JSON API (session + CSRF) |
-| `/create` | Programmatic API — session **or** `Authorization: Bearer <account API key>` |
-| `/analytics` | Programmatic analytics API — account API key, scoped to that account |
+| `/create` | Programmatic API - session **or** `Authorization: Bearer <account API key>` |
+| `/analytics` | Programmatic analytics API - account API key, scoped to that account |
 | `/:id` | Redirect (302) + click recording |
 
 \* Users directory is visible to platform admins only.
@@ -180,11 +180,11 @@ npm run typecheck # tsc --noEmit
 
 Two workflows run on `main`:
 
-- **`ci.yml`** — typecheck, Vitest suite, and a dashboard build on every push and pull request.
-- **`deploy.yml`** — builds the dashboard, then `wrangler deploy`.
+- **`ci.yml`** - typecheck, Vitest suite, and a dashboard build on every push and pull request.
+- **`deploy.yml`** - builds the dashboard, then `wrangler deploy`.
 
 Deploys need a `CLOUDFLARE_API_TOKEN` repository secret with **Edit Cloudflare Workers** permission on the account in `wrangler.jsonc`. An expired or under-scoped token surfaces as `Authentication error [code: 10000]` / `Invalid access token [code: 9109]` in the deploy log.
 
 ## License
 
-MIT — see [LICENSE.md](LICENSE.md).
+MIT - see [LICENSE.md](LICENSE.md).

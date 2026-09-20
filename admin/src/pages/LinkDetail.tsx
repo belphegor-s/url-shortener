@@ -181,7 +181,7 @@ function RecordRow({ r }: { r: ClickRecord }) {
 			<div className="min-w-0 truncate text-fg" title={r.timestamp}>{relative(r.timestamp)}</div>
 			<div className="flex min-w-0 items-center gap-1.5 text-muted">
 				<Flag code={r.country_code} className="text-[15px]" />
-				<span className="truncate font-mono text-[12px]">{r.ip || '—'}</span>
+				<span className="truncate font-mono text-[12px]">{r.ip || '-'}</span>
 			</div>
 			<div className="min-w-0 truncate text-muted" title={r.user_agent}>{uaLabel(r.user_agent)}</div>
 			<div className="min-w-0 truncate text-muted" title={r.referrer}>{r.referrer ? hostOf(r.referrer) : <span className="text-faint">direct</span>}</div>

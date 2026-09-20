@@ -67,7 +67,7 @@ export const spec = {
 					},
 					200: { description: 'An existing short URL was returned for this original URL (dedup).' },
 					400: { description: 'Invalid url / custom_id / expiry' },
-					409: { description: 'Conflict — Custom ID already in use' },
+					409: { description: 'Conflict - Custom ID already in use' },
 					429: { description: 'Rate limit exceeded' },
 					500: { description: 'Internal server error' },
 				},
@@ -76,7 +76,7 @@ export const spec = {
 		// NOTE: GET /:id (the redirect) is intentionally not documented as a Swagger operation.
 		// Swagger "Try it out" uses fetch(), which auto-follows the 302 to the target host;
 		// cross-origin targets (e.g. github.com) don't send CORS headers, so the browser blocks
-		// reading the response. The redirect works fine via normal navigation — paste it in the
+		// reading the response. The redirect works fine via normal navigation - paste it in the
 		// address bar. Documenting it here only invites that confusing CORS error.
 		'/analytics': {
 			get: {
@@ -182,8 +182,8 @@ export const spec = {
 							},
 						},
 					},
-					400: { description: 'Invalid request body — `ids` is missing or empty.' },
-					401: { description: 'Unauthorized — Invalid API key.' },
+					400: { description: 'Invalid request body - `ids` is missing or empty.' },
+					401: { description: 'Unauthorized - Invalid API key.' },
 				},
 			},
 		},

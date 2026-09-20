@@ -1,6 +1,6 @@
 import type { Bindings } from '../types';
 
-/** OAuth state lifetime — an auth attempt must complete well within this. */
+/** OAuth state lifetime - an auth attempt must complete well within this. */
 const STATE_TTL_MS = 10 * 60 * 1000;
 
 const GITHUB_AUTHORIZE = 'https://github.com/login/oauth/authorize';

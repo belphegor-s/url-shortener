@@ -13,11 +13,11 @@ export default defineConfig({
 		rollupOptions: {
 			output: {
 				// Only peel off the heavy *leaf* libraries (recharts is lazy-loaded with the chart
-				// pages, motion is large). React and friends stay together in the entry chunk —
+				// pages, motion is large). React and friends stay together in the entry chunk -
 				// splitting React across chunks caused a vendor<->react circular import.
 				manualChunks(id) {
 					if (!id.includes('node_modules')) return;
-					// Leaf libraries with no React dependency — safe to isolate, big + cacheable.
+					// Leaf libraries with no React dependency - safe to isolate, big + cacheable.
 					if (id.includes('d3-') || id.includes('victory-vendor') || id.includes('internmap')) return 'd3';
 					if (id.includes('lodash')) return 'lodash';
 					if (id.includes('recharts') || id.includes('react-smooth') || id.includes('react-transition-group')) return 'charts';

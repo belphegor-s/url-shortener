@@ -59,7 +59,7 @@ describe('link ownership', () => {
 		const otherList = (await (await call('/api/links', { headers: { cookie: other.cookie } })).json()) as { data: { id: string }[] };
 		expect(otherList.data.some((l) => l.id === created.id)).toBe(false);
 
-		// Reading someone else's link 404s (not 403 — avoid leaking existence).
+		// Reading someone else's link 404s (not 403 - avoid leaking existence).
 		expect((await call(`/api/links/${created.id}`, { headers: { cookie: other.cookie } })).status).toBe(404);
 	});
 

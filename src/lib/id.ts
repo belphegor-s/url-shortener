@@ -3,7 +3,7 @@ import { customAlphabet } from 'nanoid';
 /** 7 chars over a 36-char alphabet = 36^7 ≈ 78B keyspace. */
 export const nanoid = customAlphabet('1234567890abcdefghijklmnopqrstuvwxyz', 7);
 
-/** Path segments that double as routes — a custom id must never shadow them. */
+/** Path segments that double as routes - a custom id must never shadow them. */
 const RESERVED = new Set(['create', 'analytics', 'admin', 'api', 'auth', 'docs', 'dashboard', 'login', 'logout', 'me', 'sessions', 'users', '']);
 
 /** Allowed custom-id charset + length bounds. */

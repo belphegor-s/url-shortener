@@ -8,10 +8,10 @@ export const redirect = new Hono<AppEnv>();
 /**
  * Hot path: short-code -> 302.
  *
- * 1. KV read-through — warm hits never touch D1.
+ * 1. KV read-through - warm hits never touch D1.
  * 2. D1 fallback on miss, then warm KV (non-blocking).
  * 3. Expiry / active gate -> 410 Gone.
- * 4. Analytics write deferred via waitUntil — redirect returns immediately.
+ * 4. Analytics write deferred via waitUntil - redirect returns immediately.
  */
 redirect.get('/:id', async (c) => {
 	const id = c.req.param('id');

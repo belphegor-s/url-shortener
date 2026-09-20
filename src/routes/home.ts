@@ -84,7 +84,7 @@ home.get('/sitemap.xml', (c) => {
 home.get('/manifest.webmanifest', (c) =>
 	c.body(
 		JSON.stringify({
-			name: 'SHRT — URL Shortener',
+			name: 'SHRT - URL Shortener',
 			short_name: 'SHRT',
 			description: 'Short links, long reach.',
 			start_url: '/',

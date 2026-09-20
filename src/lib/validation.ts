@@ -1,4 +1,4 @@
-/** Accept only http(s) URLs — blocks javascript:, data:, file: and other open-redirect vectors. */
+/** Accept only http(s) URLs - blocks javascript:, data:, file: and other open-redirect vectors. */
 export const isValidUrl = (url: string): boolean => {
 	try {
 		const u = new URL(url);

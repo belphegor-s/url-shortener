@@ -6,18 +6,18 @@ export const full = (n: number): string => Intl.NumberFormat('en').format(n);
 
 /** ISO/epoch -> "Jun 13, 2026". */
 export const fmtDate = (input: string | number | null): string => {
-	if (input == null) return '—';
+	if (input == null) return '-';
 	const d = new Date(typeof input === 'number' ? input : input.replace(' ', 'T') + (typeof input === 'string' && !input.includes('Z') ? 'Z' : ''));
-	if (isNaN(d.getTime())) return '—';
+	if (isNaN(d.getTime())) return '-';
 	return d.toLocaleDateString('en', { month: 'short', day: 'numeric', year: 'numeric' });
 };
 
 /** Relative time, e.g. "3h ago". */
 export const relative = (input: string | number | null): string => {
-	if (input == null) return '—';
+	if (input == null) return '-';
 	const d = new Date(typeof input === 'number' ? input : input.replace(' ', 'T') + (typeof input === 'string' && !input.includes('Z') ? 'Z' : ''));
 	const ms = Date.now() - d.getTime();
-	if (isNaN(ms)) return '—';
+	if (isNaN(ms)) return '-';
 	const s = Math.round(ms / 1000);
 	if (s < 60) return 'just now';
 	const m = Math.round(s / 60);

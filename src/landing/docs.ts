@@ -11,7 +11,7 @@ export interface DocsOptions {
 	csrf?: string;
 }
 
-const TITLE = 'API reference — SHRT';
+const TITLE = 'API reference - SHRT';
 const DESCRIPTION =
 	'Reference for the SHRT HTTP API: create short links, resolve them, and read per-link click analytics with a per-account API key.';
 

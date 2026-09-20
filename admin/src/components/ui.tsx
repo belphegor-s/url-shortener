@@ -57,7 +57,7 @@ export function Input({ className, ...props }: InputHTMLAttributes<HTMLInputElem
 
 export function Checkbox({ indeterminate, className, ...props }: InputHTMLAttributes<HTMLInputElement> & { indeterminate?: boolean }) {
 	const ref = useRef<HTMLInputElement>(null);
-	// `indeterminate` is a DOM property only — must be set imperatively.
+	// `indeterminate` is a DOM property only - must be set imperatively.
 	useEffect(() => {
 		if (ref.current) ref.current.indeterminate = !!indeterminate;
 	}, [indeterminate]);

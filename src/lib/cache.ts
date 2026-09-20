@@ -1,6 +1,6 @@
 import type { Bindings, CachedLink } from '../types';
 
-/** KV entry TTL — long enough to stay hot, short enough that drift self-heals. */
+/** KV entry TTL - long enough to stay hot, short enough that drift self-heals. */
 const KV_TTL_SECONDS = 60 * 60; // 1h
 /** Edge cacheTtl for KV reads (fast warm hits within a colo). */
 const KV_CACHE_TTL = 300;

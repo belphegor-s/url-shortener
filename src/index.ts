@@ -64,7 +64,7 @@ app.route('/', api);
 app.route('/', create);
 app.route('/', analytics);
 
-// Redirect catch-all — must stay last so it never shadows the routes above.
+// Redirect catch-all - must stay last so it never shadows the routes above.
 app.route('/', redirect);
 
 app.notFound((c) => fail(c, 404, 'not_found', 'Resource not found'));

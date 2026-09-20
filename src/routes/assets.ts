@@ -18,7 +18,7 @@ async function serve(c: Context<AppEnv>) {
 
 	let res = await c.env.ASSETS.fetch(new Request(`${origin}${assetPath}`, c.req.raw));
 	if (res.status === 404) {
-		// SPA fallback — let React Router handle the path.
+		// SPA fallback - let React Router handle the path.
 		res = await c.env.ASSETS.fetch(new Request(`${origin}/index.html`));
 	}
 	return res;

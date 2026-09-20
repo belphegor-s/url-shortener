@@ -24,7 +24,7 @@ const AUTH_ERRORS: Record<string, string> = {
 	exchange: 'We could not complete GitHub sign-in. Please try again.',
 };
 
-const TITLE = 'SHRT — Short links, long reach';
+const TITLE = 'SHRT - Short links, long reach';
 const DESCRIPTION =
 	'SHRT is an open-source URL shortener on Cloudflare Workers: edge redirects, custom codes, link expiry and privacy-friendly click analytics. Sign in with GitHub and start shortening in seconds.';
 

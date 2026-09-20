@@ -1,6 +1,6 @@
 import type { Bindings } from '../types';
 
-/** Cookie name. `__Host-` prefix forces Secure + Path=/ + no Domain — strongest binding. */
+/** Cookie name. `__Host-` prefix forces Secure + Path=/ + no Domain - strongest binding. */
 export const SESSION_COOKIE = '__Host-session';
 /** Persistent session lifetime. */
 export const SESSION_TTL_MS = 30 * 24 * 60 * 60 * 1000; // 30 days
@@ -24,7 +24,7 @@ function randomToken(bytes = 32): string {
 	return btoa(String.fromCharCode(...buf)).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
 }
 
-/** Hex SHA-256 — used to store only a hash of the session token. */
+/** Hex SHA-256 - used to store only a hash of the session token. */
 export async function sha256Hex(input: string): Promise<string> {
 	const digest = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(input));
 	return [...new Uint8Array(digest)].map((b) => b.toString(16).padStart(2, '0')).join('');
@@ -80,7 +80,7 @@ export async function getSession(env: Bindings, token: string | undefined): Prom
 	return row;
 }
 
-/** Bump last_seen (and refresh metadata) — call via waitUntil. */
+/** Bump last_seen (and refresh metadata) - call via waitUntil. */
 export function touchSession(env: Bindings, id: string, meta: { ip: string; country: string }): Promise<unknown> {
 	return env.DB.prepare(`UPDATE sessions SET last_seen = ?, ip = ?, country_code = ? WHERE id = ?`)
 		.bind(Date.now(), meta.ip, meta.country, id)

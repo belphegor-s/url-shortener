@@ -125,7 +125,7 @@ export interface ApiKeyRow {
 	last_used_at: number | null;
 }
 export interface ApiKeyCreated extends ApiKeyRow {
-	/** The raw key — returned exactly once, at creation. */
+	/** The raw key - returned exactly once, at creation. */
 	key: string;
 }
 export interface SessionRow {
