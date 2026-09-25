@@ -1,4 +1,3 @@
-import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { api, type Scope, type PlatformStats } from '../lib/api';
@@ -9,6 +8,9 @@ import { TrendChart, BarList, HourChart, ShareBar } from '../components/charts';
 import { compact, full, hostOf } from '../lib/format';
 import { Flag } from '../components/Flag';
 import { IconChart, IconGlobe, IconLink, IconUsers, IconDevices } from '../components/icons';
+import { useFilters } from '../lib/filters';
+
+const FILTERS = { scope: 'mine' };
 
 function Stat({ label, value, sub, delta }: { label: string; value: string; sub?: string; delta?: number | null }) {
 	return (
@@ -35,7 +37,9 @@ const change = (current: number, previous: number): number | null => (previous ?
 
 export default function Overview() {
 	const { user } = useAuth();
-	const [scope, setScope] = useState<Scope>('mine');
+	const [filters, setFilters] = useFilters(FILTERS);
+	const scope = filters.scope as Scope;
+	const setScope = (scope: Scope) => setFilters({ scope });
 	const { data, isLoading } = useQuery({ queryKey: ['overview', scope], queryFn: () => api.overview(scope) });
 
 	if (isLoading || !data) return <OverviewSkeleton />;

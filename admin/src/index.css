@@ -243,3 +243,37 @@
 		}
 	}
 }
+
+/* Theme ripple. The toggle runs the theme swap inside a view transition and the new
+   theme spreads out from the button like a pebble dropped in water: a soft-edged
+   disc with three fainter rings of the new theme running ahead of it. The rings
+   start close together and spread apart as the wave travels. The toggle sets
+   --ripple-x / --ripple-y / --ripple-end on <html> and adds .theme-ripple for the
+   duration, which also overrides page-specific root transitions (e.g. /privacy). */
+@property --ripple-r { syntax: '<length>'; inherits: false; initial-value: 0px; }
+@property --ripple-s { syntax: '<number>'; inherits: false; initial-value: 0.35; }
+
+:root.theme-ripple::view-transition-old(root) { display: block; animation: none; }
+:root.theme-ripple::view-transition-new(root) {
+  mix-blend-mode: normal;
+  animation: theme-ripple 0.95s cubic-bezier(0.25, 0.8, 0.3, 1) both;
+  -webkit-mask-image: var(--ripple-mask);
+  mask-image: var(--ripple-mask);
+  --ripple-mask: radial-gradient(circle at var(--ripple-x, 50%) var(--ripple-y, 50%),
+    #000 var(--ripple-r),
+    rgb(0 0 0 / 0.55) calc(var(--ripple-r) + 2px),
+    transparent calc(var(--ripple-r) + 16px * var(--ripple-s)),
+    transparent calc(var(--ripple-r) + 34px * var(--ripple-s)),
+    rgb(0 0 0 / 0.32) calc(var(--ripple-r) + 42px * var(--ripple-s)),
+    transparent calc(var(--ripple-r) + 52px * var(--ripple-s)),
+    transparent calc(var(--ripple-r) + 76px * var(--ripple-s)),
+    rgb(0 0 0 / 0.16) calc(var(--ripple-r) + 86px * var(--ripple-s)),
+    transparent calc(var(--ripple-r) + 98px * var(--ripple-s)),
+    transparent calc(var(--ripple-r) + 124px * var(--ripple-s)),
+    rgb(0 0 0 / 0.07) calc(var(--ripple-r) + 134px * var(--ripple-s)),
+    transparent calc(var(--ripple-r) + 148px * var(--ripple-s)));
+}
+@keyframes theme-ripple {
+  from { --ripple-r: 0px; --ripple-s: 0.35; }
+  to { --ripple-r: var(--ripple-end, 150vmax); --ripple-s: 1; }
+}

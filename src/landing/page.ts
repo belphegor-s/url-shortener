@@ -177,14 +177,10 @@ const step = (n: number, title: string, body: string): string =>
 
 function codeCard(baseUrl: string): string {
 	const request =
-		`# Create a link with an account API key
-` +
-		`curl -X POST ${baseUrl}/create \
-` +
-		`  -H "Authorization: Bearer $SHRT_API_KEY" \
-` +
-		`  -H "content-type: application/json" \
-` +
+		`# Create a link with an account API key\n` +
+		`curl -X POST ${baseUrl}/create \\\n` +
+		`  -H "Authorization: Bearer $SHRT_API_KEY" \\\n` +
+		`  -H "content-type: application/json" \\\n` +
 		`  -d '{"url":"https://example.com"}'`;
 
 	const response = `{

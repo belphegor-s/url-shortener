@@ -25,8 +25,20 @@ export const script = String.raw`
     if (toggle) {
       toggle.addEventListener('click', function () {
         var next = root.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
-        apply(next);
         try { localStorage.setItem(KEY, next); } catch (e) {}
+        var reduced = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+        if (!document.startViewTransition || reduced) return apply(next);
+        // Ripple out from the button; the rings trail the edge by ~150px, so run past the far corner.
+        var r = toggle.getBoundingClientRect();
+        var x = r.left + r.width / 2, y = r.top + r.height / 2;
+        var end = Math.hypot(Math.max(x, innerWidth - x), Math.max(y, innerHeight - y)) + 150;
+        root.style.setProperty('--ripple-x', x + 'px');
+        root.style.setProperty('--ripple-y', y + 'px');
+        root.style.setProperty('--ripple-end', end + 'px');
+        root.classList.add('theme-ripple');
+        document.startViewTransition(function () { apply(next); }).finished.finally(function () {
+          root.classList.remove('theme-ripple');
+        });
       });
     }
 

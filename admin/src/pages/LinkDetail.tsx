@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { useParams, useNavigate, Link as RouterLink } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient, keepPreviousData } from '@tanstack/react-query';
 import { api, type ClickRecord } from '../lib/api';
@@ -7,27 +7,21 @@ import { TrendChart, BarList } from '../components/charts';
 import { IconSearch, IconExternal, IconTrash, IconPower, IconChevron, IconGlobe } from '../components/icons';
 import { full, fmtDate, relative, hostOf, uaLabel } from '../lib/format';
 import { Flag } from '../components/Flag';
+import { useFilters, useSearchFilter, toPage } from '../lib/filters';
 
-function useDebounced<T>(value: T, ms = 300): T {
-	const [v, setV] = useState(value);
-	useEffect(() => {
-		const t = setTimeout(() => setV(value), ms);
-		return () => clearTimeout(t);
-	}, [value, ms]);
-	return v;
-}
+const FILTERS = { q: '', page: '1' };
 
 export default function LinkDetail() {
 	const { id = '' } = useParams();
 	const navigate = useNavigate();
 	const qc = useQueryClient();
-	const [search, setSearch] = useState('');
-	const q = useDebounced(search);
-	const [page, setPage] = useState(1);
+	const [filters, setFilters] = useFilters(FILTERS);
+	const { q } = filters;
+	const page = toPage(filters.page);
+	const [search, setSearch] = useSearchFilter(q, (q) => setFilters({ q }, { replace: true }));
+	const setPage = (fn: (p: number) => number) => setFilters({ page: String(fn(page)) });
 	const [confirmDel, setConfirmDel] = useState(false);
 	const limit = 25;
-
-	useEffect(() => setPage(1), [q]);
 
 	const { data, isFetching, isError } = useQuery({
 		queryKey: ['link', id, q, page],

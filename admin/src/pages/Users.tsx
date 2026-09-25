@@ -56,7 +56,11 @@ export default function Users() {
 								</div>
 								<div className="tabular text-sm text-fg sm:text-right">
 									<span className="text-faint sm:hidden">Links: </span>
-									{full(u.links)} <span className="text-faint">({full(u.active_links)} active)</span>
+									{full(u.links)}{' '}
+									<span className="whitespace-nowrap text-faint sm:block sm:text-[12px]">
+										<span className="sm:hidden">· </span>
+										{full(u.active_links)} active
+									</span>
 								</div>
 								<div className="tabular text-sm font-medium text-fg sm:text-right">
 									<span className="text-faint sm:hidden">Clicks: </span>

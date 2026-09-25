@@ -9,15 +9,9 @@ import { Modal } from '../components/Modal';
 import { IconSearch, IconPlus, IconTrash, IconLink, IconExternal, IconChevron, IconX, IconPower } from '../components/icons';
 import { full, fmtDate, relative, hostOf } from '../lib/format';
 import { ScopeToggle } from './Overview';
+import { useFilters, useSearchFilter, toPage } from '../lib/filters';
 
-function useDebounced<T>(value: T, ms = 300): T {
-	const [v, setV] = useState(value);
-	useEffect(() => {
-		const t = setTimeout(() => setV(value), ms);
-		return () => clearTimeout(t);
-	}, [value, ms]);
-	return v;
-}
+const FILTERS = { q: '', sort: 'created', scope: 'mine', page: '1' };
 
 const SORTS: { value: string; label: string }[] = [
 	{ value: 'created', label: 'Newest' },
@@ -30,18 +24,19 @@ export default function Links() {
 	const navigate = useNavigate();
 	const { user } = useAuth();
 	const [params, setParams] = useSearchParams();
-	const [search, setSearch] = useState('');
-	const q = useDebounced(search);
-	const [page, setPage] = useState(1);
-	const [sort, setSort] = useState('created');
-	const [scope, setScope] = useState<Scope>('mine');
+	const [filters, setFilters] = useFilters(FILTERS);
+	const { q, sort } = filters;
+	const scope = filters.scope as Scope;
+	const page = toPage(filters.page);
+	const [search, setSearch] = useSearchFilter(q, (q) => setFilters({ q }, { replace: true }));
+	const setPage = (fn: (p: number) => number) => setFilters({ page: String(fn(page)) });
+	const setSort = (sort: string) => setFilters({ sort });
+	const setScope = (scope: Scope) => setFilters({ scope });
 	const [selected, setSelected] = useState<Set<string>>(new Set());
 	const [createOpen, setCreateOpen] = useState(false);
 	const [initialUrl, setInitialUrl] = useState('');
 	const [pendingDelete, setPendingDelete] = useState<string[] | null>(null);
 	const limit = 20;
-
-	useEffect(() => setPage(1), [q, sort, scope]);
 
 	// Prefill the create dialog when arriving from the landing page (?new=<url>).
 	useEffect(() => {
