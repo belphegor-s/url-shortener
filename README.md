@@ -33,11 +33,13 @@ src/
     styles.ts         Design tokens + components (shadcn-style, light & dark)
     page.ts           Landing page
     docs.ts           API reference (+ docs-styles.ts)
+    highlight.ts      Server-side syntax highlighting for docs code blocks
     icons.ts          Inline SVG icon set
     script.ts         Theme, mobile menu, copy buttons, inline shortener
+    webgl.ts          WebGL contour background for the hero
   openapi/spec.ts     OpenAPI 3.1 document (served at /openapi.json)
 admin/                React + Vite + Tailwind dashboard (builds to ../dist-admin, served at /dashboard)
-migrations/           D1 migrations (0001 init … 0004 users)
+migrations/           D1 migrations (0001 init … 0005 api_keys)
 test/                 Vitest (pool-workers) suite
 ```
 
