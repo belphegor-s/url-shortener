@@ -5,7 +5,7 @@ export const legalStyles = /* css */ `
 
 /* ---------------------------------------------------------------- hero --- */
 
-.legal-hero { padding-bottom: 2.5rem; animation: legal-in 0.5s ease both; }
+.legal-hero { padding-bottom: 2.5rem; }
 .legal-hero h1 { margin-top: 1.5rem; }
 .legal-hero .lead { margin-top: 0.875rem; max-width: 62ch; }
 .legal-hero .lead strong { color: var(--foreground); font-weight: 500; }
@@ -16,15 +16,23 @@ export const legalStyles = /* css */ `
   border: 1px solid var(--border); border-radius: 9999px; background: var(--card-muted);
 }
 .legal-tabs a {
-  padding: 0.25rem 0.875rem; border: 1px solid transparent; border-radius: 9999px;
-  font-size: 0.8125rem; color: var(--muted-foreground);
-  transition: color 0.15s ease, background-color 0.15s ease;
+  position: relative; display: block; padding: 0.25rem 0.875rem; border-radius: 9999px;
+  font-size: 0.8125rem; font-weight: 500; color: var(--muted-foreground);
+  transition: color 0.15s ease;
 }
-.legal-tabs a:hover { color: var(--foreground); }
-.legal-tabs a[aria-current="page"] {
-  background: var(--card); border-color: var(--border); color: var(--foreground);
-  font-weight: 500; box-shadow: var(--shadow-sm);
+.legal-tabs a:hover, .legal-tabs a[aria-current="page"] { color: var(--foreground); }
+.legal-tabs a > span:not(.legal-tab-pill) { position: relative; z-index: 1; }
+
+/* The active pill is its own element so the view transition can slide it between
+   tabs. Labels are named too, which keeps them painted above the moving pill. */
+.legal-tab-pill {
+  position: absolute; inset: 0; z-index: 0;
+  border: 1px solid var(--border); border-radius: 9999px;
+  background: var(--card); box-shadow: var(--shadow-sm);
+  view-transition-name: legal-pill;
 }
+.legal-tab-privacy { view-transition-name: legal-tab-privacy; }
+.legal-tab-terms { view-transition-name: legal-tab-terms; }
 
 .legal-meta {
   display: flex; flex-wrap: wrap; align-items: center; gap: 0.5rem 0.75rem;
@@ -103,7 +111,35 @@ export const legalStyles = /* css */ `
 .legal-end p { margin-top: 0.375rem !important; font-size: 0.875rem; }
 .legal-end-actions { display: flex; flex-wrap: wrap; gap: 0.5rem; }
 
-@keyframes legal-in { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+/* ---------------------------------------------------- page transition --- */
+
+/* Cross-document view transition between /privacy and /terms. Only these two pages
+   opt in, so every other navigation stays instant. Unsupported browsers just navigate. */
+@view-transition { navigation: auto; }
+
+.legal { view-transition-name: legal-page; }
+
+::view-transition-group(legal-pill) { animation-duration: 0.4s; animation-timing-function: cubic-bezier(0.22, 1, 0.36, 1); }
+::view-transition-old(legal-pill) { display: none; }
+::view-transition-new(legal-pill) { animation: none; width: 100%; height: 100%; }
+
+::view-transition-group(legal-tab-privacy),
+::view-transition-group(legal-tab-terms) { animation-duration: 0.25s; }
+
+::view-transition-group(legal-page) { animation-duration: 0.3s; }
+::view-transition-old(legal-page) { animation: 0.14s ease-in both legal-out; }
+::view-transition-new(legal-page) { animation: 0.32s cubic-bezier(0.22, 1, 0.36, 1) 0.06s both legal-in; }
+
+/* Header, rails and footer are identical on both pages: keep them still. */
+::view-transition-old(root), ::view-transition-new(root) { animation: none; }
+::view-transition-old(root) { display: none; }
+
+@keyframes legal-out { to { opacity: 0; } }
+@keyframes legal-in { from { opacity: 0; transform: translateY(6px); } }
+
+@media (prefers-reduced-motion: reduce) {
+  @view-transition { navigation: none; }
+}
 
 @media (min-width: 640px) {
   .legal-end { grid-template-columns: minmax(0, 1fr) auto; padding: 1.5rem 1.75rem; }
@@ -123,6 +159,5 @@ export const legalStyles = /* css */ `
   .site-header, .site-footer, .docs-nav, .legal-tabs, .legal-end-actions { display: none !important; }
   .docs { display: block; padding: 0; }
   .container { border: 0; }
-  .legal-hero { animation: none; }
 }
 `;

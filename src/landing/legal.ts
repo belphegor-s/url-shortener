@@ -317,7 +317,10 @@ export function renderLegal(kind: LegalKind, o: LegalOptions): string {
     <section id="summary" class="legal-hero">
       <nav class="legal-tabs" aria-label="Legal documents">
         ${(['privacy', 'terms'] as const)
-					.map((k) => `<a href="${DOCS[k].path}"${k === kind ? ' aria-current="page"' : ''}>${k === 'privacy' ? 'Privacy' : 'Terms'}</a>`)
+					.map(
+						(k) =>
+							`<a href="${DOCS[k].path}"${k === kind ? ' aria-current="page"' : ''}>${k === kind ? '<span class="legal-tab-pill" aria-hidden="true"></span>' : ''}<span class="legal-tab-${k}">${k === 'privacy' ? 'Privacy' : 'Terms'}</span></a>`
+					)
 					.join('')}
       </nav>
       <h1>${esc(doc.heading)}</h1>
