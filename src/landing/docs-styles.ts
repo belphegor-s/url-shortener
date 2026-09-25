@@ -30,7 +30,10 @@ export const docsStyles = /* css */ `
 .docs-nav a.is-active { background: var(--primary); border-color: var(--primary); color: var(--primary-foreground); }
 
 .docs-main { min-width: 0; display: grid; grid-template-columns: minmax(0, 1fr); gap: 2.5rem; }
-.docs-main section { scroll-margin-top: 8.5rem; }
+/* Anchor offsets come from the sections alone; the site-wide scroll-padding would stack
+   on top and leave a gap. Mobile clears the header (3.5rem) plus the chip rail (~3.25rem). */
+html { scroll-padding-top: 0; }
+.docs-main section { scroll-margin-top: 7.75rem; }
 .docs-main h1 { font-size: clamp(1.875rem, 5vw, 2.5rem); letter-spacing: -0.04em; }
 .docs-main h2 { font-size: 1.375rem; letter-spacing: -0.03em; }
 .docs-main h3 { font-size: 0.9375rem; }
@@ -104,6 +107,7 @@ td .req { color: var(--destructive); font-size: 0.6875rem; margin-left: 0.25rem;
   .docs-nav a { border: 0; background: none; border-radius: 0.5rem; padding: 0.375rem 0.625rem; white-space: normal; }
   .docs-nav a:hover { background: var(--muted); color: var(--foreground); }
   .docs-nav a.is-active { background: var(--muted); color: var(--foreground); font-weight: 500; }
-  .docs-main section { scroll-margin-top: 6rem; }
+  /* Level with the top of the sticky sidebar. */
+  .docs-main section { scroll-margin-top: 5rem; }
 }
 `;

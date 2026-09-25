@@ -15,6 +15,34 @@ export const script = String.raw`
     if (meta) meta.setAttribute('content', theme === 'dark' ? '#09090b' : '#ffffff');
   }
 
+  // Soft water-drop "bloop" for the theme ripple, synthesized so there is no asset:
+  // a sine whose pitch glides up, then a fainter echo. Lower to dark, brighter to light.
+  var audio = null;
+  function droplet(theme) {
+    try {
+      var Ctx = window.AudioContext || window.webkitAudioContext;
+      if (!Ctx) return;
+      audio = audio || new Ctx();
+      if (audio.state === 'suspended') audio.resume();
+      var t = audio.currentTime;
+      var blip = function (from, to, start, dur, vol) {
+        var osc = audio.createOscillator(), gain = audio.createGain();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(from, start);
+        osc.frequency.exponentialRampToValueAtTime(to, start + dur * 0.35);
+        gain.gain.setValueAtTime(0, start);
+        gain.gain.linearRampToValueAtTime(vol, start + 0.006);
+        gain.gain.exponentialRampToValueAtTime(0.0001, start + dur);
+        osc.connect(gain).connect(audio.destination);
+        osc.start(start);
+        osc.stop(start + dur + 0.02);
+      };
+      var base = theme === 'dark' ? 520 : 780;
+      blip(base, base * 2.1, t, 0.14, 0.08);
+      blip(base * 1.5, base * 2.4, t + 0.08, 0.2, 0.03);
+    } catch (e) {}
+  }
+
   var stored = null;
   try { stored = localStorage.getItem(KEY); } catch (e) {}
   apply(stored === 'light' || stored === 'dark' ? stored : prefersDark() ? 'dark' : 'light');
@@ -26,6 +54,7 @@ export const script = String.raw`
       toggle.addEventListener('click', function () {
         var next = root.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
         try { localStorage.setItem(KEY, next); } catch (e) {}
+        droplet(next);
         var reduced = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
         if (!document.startViewTransition || reduced) return apply(next);
         // Ripple out from the button; the rings trail the edge by ~150px, so run past the far corner.

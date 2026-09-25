@@ -40,6 +40,42 @@ function current(): Theme {
 	return document.documentElement.getAttribute('data-theme') === 'light' ? 'light' : 'dark';
 }
 
+let audio: AudioContext | undefined;
+
+/**
+ * A soft water-drop "bloop" to go with the ripple, synthesized so there is no asset
+ * to load: a sine whose pitch glides up, then a fainter echo. Lower going to dark,
+ * brighter going to light. Created lazily inside the click, so autoplay rules allow it.
+ */
+function droplet(to: Theme) {
+	try {
+		const Ctx = window.AudioContext ?? (window as unknown as { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
+		if (!Ctx) return;
+		audio ??= new Ctx();
+		const ctx = audio;
+		if (ctx.state === 'suspended') void ctx.resume();
+		const t = ctx.currentTime;
+		const blip = (from: number, to: number, start: number, dur: number, vol: number) => {
+			const osc = ctx.createOscillator();
+			const gain = ctx.createGain();
+			osc.type = 'sine';
+			osc.frequency.setValueAtTime(from, start);
+			osc.frequency.exponentialRampToValueAtTime(to, start + dur * 0.35);
+			gain.gain.setValueAtTime(0, start);
+			gain.gain.linearRampToValueAtTime(vol, start + 0.006);
+			gain.gain.exponentialRampToValueAtTime(0.0001, start + dur);
+			osc.connect(gain).connect(ctx.destination);
+			osc.start(start);
+			osc.stop(start + dur + 0.02);
+		};
+		const base = to === 'dark' ? 520 : 780;
+		blip(base, base * 2.1, t, 0.14, 0.08);
+		blip(base * 1.5, base * 2.4, t + 0.08, 0.2, 0.03);
+	} catch {
+		/* audio is decoration; never let it break the toggle */
+	}
+}
+
 type ViewTransitionDocument = Document & { startViewTransition?: (update: () => void) => { finished: Promise<void> } };
 
 /**
@@ -78,6 +114,7 @@ export function useTheme(): [Theme, (origin?: Element) => void] {
 		} catch {
 			/* private mode: the choice just does not persist */
 		}
+		droplet(next);
 		// The new snapshot is taken when `update` returns, so the DOM must be final by then.
 		ripple(origin, () => {
 			paint(next);

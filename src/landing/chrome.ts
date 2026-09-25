@@ -1,7 +1,18 @@
 import type { User } from '../types';
 import { icon } from './icons';
 import { styles } from './styles';
-import { NOISE_REPO } from './webgl';
+import { NOISE_REPO, webglScript } from './webgl';
+import { script } from './script';
+
+/** The public-site script bundle, served at /landing.js. Both modules are self-contained IIFEs. */
+export const landingJs = script + webglScript;
+
+/** Content hash of `landingJs` (FNV-1a), appended to its URL so a deploy never serves a stale cached copy. */
+const LANDING_JS_VERSION = (() => {
+	let h = 0x811c9dc5;
+	for (let i = 0; i < landingJs.length; i++) h = Math.imul(h ^ landingJs.charCodeAt(i), 0x01000193);
+	return (h >>> 0).toString(36);
+})();
 
 /** Canonical source repository. Surfaced in the header, footer and hero. */
 export const REPO_URL = 'https://github.com/belphegor-s/url-shortener';
@@ -160,7 +171,7 @@ export function renderPage(o: PageOptions): string {
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
 ${o.jsonLd ? `<script type="application/ld+json">${JSON.stringify(o.jsonLd)}</script>` : ''}
-<script src="/landing.js"></script>
+<script src="/landing.js?v=${LANDING_JS_VERSION}"></script>
 <style>${styles}${o.extraCss ?? ''}</style>
 </head>
 <body${o.bodyAttrs ? ` ${o.bodyAttrs}` : ''}>

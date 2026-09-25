@@ -3,12 +3,10 @@ import type { Context } from 'hono';
 import type { AppEnv } from '../types';
 import { getSession, parseCookies, SESSION_COOKIE } from '../lib/session';
 import { getUser } from '../lib/users';
-import { REPO_URL } from '../landing/chrome';
+import { REPO_URL, landingJs } from '../landing/chrome';
 import { renderLanding } from '../landing/page';
 import { renderDocs } from '../landing/docs';
 import { renderLegal } from '../landing/legal';
-import { script } from '../landing/script';
-import { webglScript } from '../landing/webgl';
 import { spec } from '../openapi/spec';
 
 export const home = new Hono<AppEnv>();
@@ -63,8 +61,8 @@ home.get('/openapi.json', (c) =>
 // The public-site script is served as its own asset so the page can keep a strict CSP
 // (`script-src 'self'`) without nonces or inline scripts.
 home.get('/landing.js', (c) =>
-	// Both modules are self-contained IIFEs that already end in a newline.
-	c.body(script + webglScript, 200, {
+	// Pages reference it as /landing.js?v=<content hash>, so each version is a new URL.
+	c.body(landingJs, 200, {
 		'content-type': 'application/javascript; charset=utf-8',
 		'cache-control': 'public, max-age=3600, s-maxage=86400',
 	})
