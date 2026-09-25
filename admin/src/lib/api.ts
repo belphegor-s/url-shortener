@@ -61,11 +61,37 @@ export interface Me {
 export type Scope = 'mine' | 'all';
 export interface Overview {
 	scope: Scope;
-	totals: { links: number; active_links: number; clicks: number; clicks_24h: number; clicks_7d: number };
+	totals: { links: number; active_links: number; clicks: number; clicks_24h: number; clicks_7d: number; clicks_prev_7d: number };
 	series: { day: string; clicks: number }[];
+	/** Links created per day (reuses the `clicks` key so it plots with the same helpers). */
+	link_series: { day: string; clicks: number }[];
+	/** Clicks by UTC hour of day over the last 30 days. Sparse. */
+	hourly: { hour: number; clicks: number }[];
+	browsers: { label: string; clicks: number }[];
+	os: { label: string; clicks: number }[];
 	top_links: { id: string; original_url: string; clicks: number }[];
 	top_countries: { country_code: string; clicks: number }[];
 	top_referrers: { referrer: string; clicks: number }[];
+	top_destinations: { host: string; links: number }[];
+	/** Present only for an admin viewing ?scope=all. */
+	platform: PlatformStats | null;
+}
+export interface PlatformStats {
+	totals: {
+		users: number;
+		admins: number;
+		new_users_7d: number;
+		active_users_7d: number;
+		users_with_links: number;
+		anonymous_links: number;
+		expired_links: number;
+		links_7d: number;
+		api_keys: number;
+		active_sessions: number;
+	};
+	/** New accounts per day (same `clicks` key as other series). */
+	signups: { day: string; clicks: number }[];
+	top_users: { id: string; login: string; name: string | null; avatar_url: string | null; links: number; clicks: number }[];
 }
 export interface AdminUser {
 	id: string;

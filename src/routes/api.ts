@@ -78,15 +78,103 @@ api.get('/overview', async (c) => {
 		).bind(...ifUid(1)),
 	]);
 
+	// Breakdowns shared by both scopes. `aFrom`/`aWhere` scope the analytics table the same way
+	// the queries above do; `lWhere` scopes `urls u`.
+	const aFrom = all ? 'FROM analytics a' : 'FROM analytics a JOIN urls u ON u.id = a.short_id';
+	const aWhere = (cond: string) => `WHERE ${all ? '' : 'u.user_id = ? AND '}${cond}`;
+	const lWhere = (cond: string) => `WHERE ${all ? '' : 'u.user_id = ? AND '}${cond}`;
+	const ua = 'a.user_agent';
+
+	const [prevWeek, linkSeries, hourly, browsers, os, destinations] = await c.env.DB.batch([
+		c.env.DB.prepare(
+			`SELECT COUNT(*) AS clicks ${aFrom} ${aWhere(`a.timestamp >= datetime('now','-14 day') AND a.timestamp < datetime('now','-7 day')`)}`
+		).bind(...ifUid(1)),
+		c.env.DB.prepare(
+			`SELECT date(u.created_at) AS day, COUNT(*) AS clicks FROM urls u ${lWhere(`u.created_at >= datetime('now','-29 day')`)} GROUP BY day ORDER BY day`
+		).bind(...ifUid(1)),
+		c.env.DB.prepare(
+			`SELECT CAST(strftime('%H', a.timestamp) AS INTEGER) AS hour, COUNT(*) AS clicks ${aFrom} ${aWhere(`a.timestamp >= datetime('now','-29 day')`)} GROUP BY hour ORDER BY hour`
+		).bind(...ifUid(1)),
+		c.env.DB.prepare(
+			`SELECT CASE
+				WHEN ${ua} IS NULL OR ${ua} = '' THEN 'Unknown'
+				WHEN ${ua} LIKE '%bot%' OR ${ua} LIKE '%crawl%' OR ${ua} LIKE '%spider%' OR ${ua} LIKE '%curl/%' OR ${ua} LIKE '%python%' THEN 'Bot'
+				WHEN ${ua} LIKE '%Edg%' THEN 'Edge'
+				WHEN ${ua} LIKE '%OPR%' OR ${ua} LIKE '%Opera%' THEN 'Opera'
+				WHEN ${ua} LIKE '%Firefox%' THEN 'Firefox'
+				WHEN ${ua} LIKE '%Chrome%' OR ${ua} LIKE '%CriOS%' THEN 'Chrome'
+				WHEN ${ua} LIKE '%Safari%' THEN 'Safari'
+				ELSE 'Other' END AS label, COUNT(*) AS clicks
+			 ${aFrom} ${aWhere('1 = 1')} GROUP BY label ORDER BY clicks DESC`
+		).bind(...ifUid(1)),
+		c.env.DB.prepare(
+			`SELECT CASE
+				WHEN ${ua} IS NULL OR ${ua} = '' THEN 'Unknown'
+				WHEN ${ua} LIKE '%Windows%' THEN 'Windows'
+				WHEN ${ua} LIKE '%Android%' THEN 'Android'
+				WHEN ${ua} LIKE '%iPhone%' OR ${ua} LIKE '%iPad%' OR ${ua} LIKE '%iOS%' THEN 'iOS'
+				WHEN ${ua} LIKE '%Mac%' THEN 'macOS'
+				WHEN ${ua} LIKE '%Linux%' THEN 'Linux'
+				ELSE 'Other' END AS label, COUNT(*) AS clicks
+			 ${aFrom} ${aWhere('1 = 1')} GROUP BY label ORDER BY clicks DESC`
+		).bind(...ifUid(1)),
+		// Destination host = text between "://" and the next "/".
+		c.env.DB.prepare(
+			`WITH r AS (SELECT substr(u.original_url, instr(u.original_url, '://') + 3) AS rest FROM urls u ${lWhere('1 = 1')})
+			 SELECT CASE WHEN instr(rest, '/') > 0 THEN substr(rest, 1, instr(rest, '/') - 1) ELSE rest END AS host, COUNT(*) AS links
+			 FROM r GROUP BY host ORDER BY links DESC LIMIT 8`
+		).bind(...ifUid(1)),
+	]);
+
 	return c.json({
 		scope: all ? 'all' : 'mine',
-		totals: totals.results[0],
+		totals: { ...(totals.results[0] as object), clicks_prev_7d: (prevWeek.results[0] as { clicks: number }).clicks },
 		series: series.results,
+		link_series: linkSeries.results,
+		hourly: hourly.results,
+		browsers: browsers.results,
+		os: os.results,
 		top_links: topLinks.results,
 		top_countries: topCountries.results,
 		top_referrers: topReferrers.results,
+		top_destinations: destinations.results,
+		platform: all ? await platformStats(c) : null,
 	});
 });
+
+/** Account-level stats only meaningful platform-wide (admin, ?scope=all). */
+async function platformStats(c: Context<AppEnv>) {
+	const now = Date.now();
+	const weekAgo = now - 7 * 24 * 60 * 60 * 1000;
+	const monthAgo = now - 29 * 24 * 60 * 60 * 1000;
+
+	const [totals, signups, topUsers] = await c.env.DB.batch([
+		c.env.DB.prepare(
+			`SELECT
+				(SELECT COUNT(*) FROM users) AS users,
+				(SELECT COUNT(*) FROM users WHERE role = 'admin') AS admins,
+				(SELECT COUNT(*) FROM users WHERE created_at >= ?) AS new_users_7d,
+				(SELECT COUNT(*) FROM users WHERE last_login >= ?) AS active_users_7d,
+				(SELECT COUNT(DISTINCT user_id) FROM urls WHERE user_id IS NOT NULL) AS users_with_links,
+				(SELECT COUNT(*) FROM urls WHERE user_id IS NULL) AS anonymous_links,
+				(SELECT COUNT(*) FROM urls WHERE expires_at IS NOT NULL AND expires_at < datetime('now')) AS expired_links,
+				(SELECT COUNT(*) FROM urls WHERE created_at >= datetime('now','-7 day')) AS links_7d,
+				(SELECT COUNT(*) FROM api_keys) AS api_keys,
+				(SELECT COUNT(*) FROM sessions WHERE expires_at > ? AND user_id IS NOT NULL) AS active_sessions`
+		).bind(weekAgo, weekAgo, now),
+		c.env.DB.prepare(
+			`SELECT date(created_at / 1000, 'unixepoch') AS day, COUNT(*) AS clicks FROM users WHERE created_at >= ? GROUP BY day ORDER BY day`
+		).bind(monthAgo),
+		c.env.DB.prepare(
+			`SELECT us.id, us.login, us.name, us.avatar_url,
+				(SELECT COUNT(*) FROM urls x WHERE x.user_id = us.id) AS links,
+				(SELECT COUNT(*) FROM analytics a JOIN urls x ON x.id = a.short_id WHERE x.user_id = us.id) AS clicks
+			 FROM users us ORDER BY clicks DESC, links DESC LIMIT 8`
+		),
+	]);
+
+	return { totals: totals.results[0], signups: signups.results, top_users: topUsers.results };
+}
 
 // ---------------------------------------------------------------------------
 // Links (search + pagination + sort)

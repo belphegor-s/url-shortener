@@ -100,10 +100,29 @@ describe('overview scopes', () => {
 
 		const res = await call('/api/overview?scope=all', { headers: { cookie: admin.cookie } });
 		expect(res.status).toBe(200);
-		const body = (await res.json()) as { scope: string; totals: { links: number }; series: unknown[] };
+		const body = (await res.json()) as {
+			scope: string;
+			totals: { links: number };
+			series: unknown[];
+			top_destinations: { host: string }[];
+			platform: { totals: { users: number }; signups: unknown[]; top_users: unknown[] } | null;
+		};
 		expect(body.scope).toBe('all');
 		expect(body.totals.links).toBeGreaterThan(0);
 		expect(Array.isArray(body.series)).toBe(true);
+		expect(body.top_destinations.some((d) => d.host === 'example.com')).toBe(true);
+		expect(body.platform?.totals.users).toBeGreaterThanOrEqual(2);
+		expect(body.platform?.signups.length).toBeGreaterThan(0);
+		expect(body.platform?.top_users.length).toBeGreaterThan(0);
+	});
+
+	it('omits platform stats from the owner-scoped view', async () => {
+		const u = await seedUser('admin');
+		const res = await call('/api/overview', { headers: { cookie: u.cookie } });
+		const body = (await res.json()) as { platform: unknown; browsers: unknown[]; hourly: unknown[] };
+		expect(body.platform).toBeNull();
+		expect(Array.isArray(body.browsers)).toBe(true);
+		expect(Array.isArray(body.hourly)).toBe(true);
 	});
 
 	it('ignores ?scope=all for a non-admin', async () => {
