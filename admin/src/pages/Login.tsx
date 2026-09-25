@@ -37,6 +37,17 @@ export default function Login() {
 				</div>
 
 				<p className="mt-5 text-center text-[12px] text-faint">
+					By continuing you agree to the{' '}
+					<a href="/terms" className="underline decoration-border-strong underline-offset-2 transition hover:text-fg">
+						Terms
+					</a>{' '}
+					and{' '}
+					<a href="/privacy" className="underline decoration-border-strong underline-offset-2 transition hover:text-fg">
+						Privacy policy
+					</a>
+					.
+				</p>
+				<p className="mt-2 text-center text-[12px] text-faint">
 					<a href="/" className="transition hover:text-fg">
 						Back to site
 					</a>

@@ -21,7 +21,9 @@ export type IconName =
 	| 'close'
 	| 'book'
 	| 'braces'
-	| 'layers';
+	| 'layers'
+	| 'eye'
+	| 'trash';
 
 const PATHS: Record<IconName, string> = {
 	bolt: '<path d="M13 2 4.5 13.5H11l-1 8.5L19.5 10H13z"/>',
@@ -48,6 +50,8 @@ const PATHS: Record<IconName, string> = {
 	braces: '<path d="M8 3H7a2 2 0 0 0-2 2v4a2 2 0 0 1-2 2 2 2 0 0 1 2 2v4a2 2 0 0 0 2 2h1"/><path d="M16 3h1a2 2 0 0 1 2 2v4a2 2 0 0 0 2 2 2 2 0 0 0-2 2v4a2 2 0 0 1-2 2h-1"/>',
 	book: '<path d="M4 4.5A2.5 2.5 0 0 1 6.5 2H20v18H6.5A2.5 2.5 0 0 0 4 22z"/><path d="M4 17.5A2.5 2.5 0 0 1 6.5 15H20"/>',
 	layers: '<path d="m12 3 9 5-9 5-9-5 9-5z"/><path d="m3 13 9 5 9-5"/>',
+	eye: '<path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/>',
+	trash: '<path d="M4 7h16M10 11v6M14 11v6"/><path d="M6 7l1 12a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2l1-12"/><path d="M9 7V4h6v3"/>',
 };
 
 /** Inline SVG icon as a string. `filled` switches stroke -> fill (used for the GitHub mark). */

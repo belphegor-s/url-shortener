@@ -119,7 +119,7 @@ function footerHtml(): string {
   </div>
   <div class="container footer-bottom">
     <span>&copy; ${new Date().getFullYear()} SHRT. Open source under MIT.</span>
-    <span>Built on Cloudflare Workers, D1 and KV.</span>
+    <span class="footer-legal"><a href="/privacy">Privacy</a><a href="/terms">Terms</a><span>Built on Cloudflare Workers, D1 and KV.</span></span>
   </div>
 </footer>`;
 }

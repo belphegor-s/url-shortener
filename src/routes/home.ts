@@ -6,6 +6,7 @@ import { getUser } from '../lib/users';
 import { REPO_URL } from '../landing/chrome';
 import { renderLanding } from '../landing/page';
 import { renderDocs } from '../landing/docs';
+import { renderLegal } from '../landing/legal';
 import { script } from '../landing/script';
 import { webglScript } from '../landing/webgl';
 import { spec } from '../openapi/spec';
@@ -43,6 +44,14 @@ home.get('/docs', async (c) => {
 	return c.html(renderDocs({ origin, baseUrl: c.env.SHORT_DOMAIN || origin, user, csrf }));
 });
 
+// Privacy policy and terms, server-rendered in the same shell as the docs.
+for (const kind of ['privacy', 'terms'] as const) {
+	home.get(`/${kind}`, async (c) => {
+		const { user, csrf } = await currentUser(c);
+		return c.html(renderLegal(kind, { origin: new URL(c.req.url).origin, user, csrf }));
+	});
+}
+
 // Machine-readable description of the same API, for client generators and Postman.
 home.get('/openapi.json', (c) =>
 	c.body(JSON.stringify(spec), 200, {
@@ -76,6 +85,8 @@ home.get('/sitemap.xml', (c) => {
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url><loc>${origin}/</loc><lastmod>${today}</lastmod><priority>1.0</priority></url>
   <url><loc>${origin}/docs</loc><lastmod>${today}</lastmod><priority>0.6</priority></url>
+  <url><loc>${origin}/privacy</loc><lastmod>${today}</lastmod><priority>0.3</priority></url>
+  <url><loc>${origin}/terms</loc><lastmod>${today}</lastmod><priority>0.3</priority></url>
 </urlset>
 `;
 	return c.body(xml, 200, { 'content-type': 'application/xml; charset=utf-8', 'cache-control': 'public, max-age=86400' });

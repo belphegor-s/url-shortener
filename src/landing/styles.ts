@@ -446,6 +446,8 @@ pre.code {
   padding-block: 1.25rem;
   color: var(--muted-foreground); font-size: 0.8125rem;
 }
+.footer-legal { display: flex; flex-wrap: wrap; gap: 0.5rem 1rem; }
+.footer-legal a:hover { color: var(--foreground); }
 
 /* ------------------------------------------------------- theme toggle --- */
 
