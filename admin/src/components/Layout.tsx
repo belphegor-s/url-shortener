@@ -4,13 +4,13 @@ import { AnimatePresence, LayoutGroup, motion } from 'motion/react';
 import { useAuth } from '../lib/auth';
 import { useTheme } from '../lib/theme';
 import { Button, Skeleton, SkeletonRows, SkeletonStats, Skeletons, SlidingIndicator, cx } from './ui';
-import { IconChart, IconLink, IconUsers, IconKey, IconLogout, IconMenu, IconX, IconSun, IconMoon, IconHome, IconDiff } from './icons';
+import { IconChart, IconLink, IconUsers, IconKey, IconLogout, IconMenu, IconX, IconSun, IconMoon, IconHome, IconDevices } from './icons';
 
 const NAV = [
 	{ to: '/', label: 'Overview', icon: IconChart, end: true },
 	{ to: '/links', label: 'Links', icon: IconLink, end: false },
 	{ to: '/keys', label: 'API keys', icon: IconKey, end: false },
-	{ to: '/sessions', label: 'Sessions', icon: IconDiff, end: false },
+	{ to: '/sessions', label: 'Sessions', icon: IconDevices, end: false },
 ];
 
 const ADMIN_NAV = [{ to: '/users', label: 'Users', icon: IconUsers, end: false }];

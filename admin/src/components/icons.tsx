@@ -33,11 +33,11 @@ export const IconUsers = (p: P) => (
 		<path d="M22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75" />
 	</svg>
 );
-export const IconDiff = (p: P) => (
+export const IconDevices = (p: P) => (
 	<svg {...base(p)}>
-		<path d="M12 3v14" />
-		<path d="M5 10h14" />
-		<path d="M5 21h14" />
+		<path d="M18 8V6a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2v7a2 2 0 0 0 2 2h8" />
+		<path d="M10 15v4M7 19h5" />
+		<rect x="16" y="12" width="6" height="10" rx="2" />
 	</svg>
 );
 export const IconSearch = (p: P) => (
