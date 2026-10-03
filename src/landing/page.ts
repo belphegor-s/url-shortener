@@ -1,7 +1,7 @@
 import { esc, renderPage, REPO_URL, type NavLink } from './chrome';
 import { CREDIT } from './webgl';
 import { highlight } from './highlight';
-import { icon, type IconName } from './icons';
+import { copyIcon, icon, type IconName } from './icons';
 
 export interface LandingOptions {
 	/** Request origin, e.g. https://short.procd.cc */
@@ -69,7 +69,7 @@ export function renderLanding(o: LandingOptions): string {
       <div class="alert" id="form-error" role="alert" hidden></div>
       <div class="result" id="result" role="status" aria-live="polite">
         <a id="result-link" href="#" target="_blank" rel="noreferrer noopener"></a>
-        <button class="btn btn-outline btn-sm" type="button" id="copy-btn" data-copy="">${icon('copy', { size: 14 })} <span>Copy</span></button>
+        <button class="btn btn-outline btn-sm" type="button" id="copy-btn" data-copy="">${copyIcon()} <span>Copy</span></button>
       </div>
     </form>
   </section>
@@ -194,7 +194,7 @@ function codeCard(baseUrl: string): string {
     ${icon('terminal', { size: 15 })}
     <span class="name">create-link.sh</span>
     <span class="lang">bash</span>
-    <button class="btn btn-ghost btn-sm" type="button" data-copy="${esc(request)}">${icon('copy', { size: 14 })} <span>Copy</span></button>
+    <button class="btn btn-ghost btn-sm" type="button" data-copy="${esc(request)}">${copyIcon()} <span>Copy</span></button>
   </div>
   <pre class="code">${highlight(request, 'bash')}
 

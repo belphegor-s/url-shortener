@@ -200,6 +200,36 @@ hr { border: 0; border-top: 1px dashed var(--border); margin: 0; }
 .btn-lg { height: 2.75rem; padding-inline: 1.375rem; font-size: 0.9375rem; }
 .btn-icon { width: 2.25rem; height: 2.25rem; padding: 0; }
 
+/* Copy button feedback. The copy glyph and a check share one grid cell; .is-copied
+   shrinks the glyph away, draws the check from its short stroke to its long one and
+   sends a single ring out from behind it. The negative dash offset is what makes the
+   stroke grow from the path's end, which is where a hand would start the tick. */
+.copy-icon { position: relative; display: grid; flex: none; }
+.copy-icon > svg { grid-area: 1 / 1; }
+.copy-icon > svg:first-child { transition: opacity 0.15s ease, transform 0.2s ease; }
+.copy-icon > svg + svg {
+  color: var(--success); stroke-width: 2.5;
+  stroke-dasharray: 24; stroke-dashoffset: -24; opacity: 0;
+  /* On the way out, fade first and only then reset the stroke. */
+  transition: opacity 0.15s ease, stroke-dashoffset 0s 0.15s;
+}
+.copy-icon::after {
+  content: ""; position: absolute; inset: 0; border-radius: 50%;
+  border: 1.5px solid var(--success); opacity: 0; pointer-events: none;
+}
+.is-copied .copy-icon > svg:first-child { opacity: 0; transform: scale(0.5) rotate(-12deg); }
+.is-copied .copy-icon > svg + svg {
+  opacity: 1; stroke-dashoffset: 0;
+  transition: opacity 0.1s ease 0.08s, stroke-dashoffset 0.38s cubic-bezier(0.65, 0, 0.35, 1) 0.08s;
+  animation: copy-pop 0.42s cubic-bezier(0.34, 1.56, 0.64, 1) 0.08s both;
+}
+.is-copied .copy-icon::after { animation: copy-ring 0.55s ease-out 0.12s; }
+@keyframes copy-pop { from { transform: scale(0.6); } to { transform: scale(1); } }
+@keyframes copy-ring {
+  from { opacity: 0.55; transform: scale(0.4); }
+  to { opacity: 0; transform: scale(2); }
+}
+
 /* --------------------------------------------------------------- bits --- */
 
 /* Wraps rather than overflows: the copy is longer than a phone is wide. */

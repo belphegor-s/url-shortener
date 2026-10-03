@@ -2,7 +2,7 @@ import type { User } from '../types';
 import { esc, renderPage, REPO_URL, type NavLink } from './chrome';
 import { docsStyles } from './docs-styles';
 import { highlight, type Lang } from './highlight';
-import { icon } from './icons';
+import { copyIcon, icon } from './icons';
 
 export interface DocsOptions {
 	origin: string;
@@ -256,7 +256,7 @@ function codeBlock(name: string, code: string, lang: Lang = 'bash', marginTop = 
               ${icon(glyph, { size: 15 })}
               <span class="name">${esc(name)}</span>
               <span class="lang">${esc(lang)}</span>
-              <button class="btn btn-ghost btn-sm" type="button" data-copy="${esc(code)}">${icon('copy', { size: 14 })} <span>Copy</span></button>
+              <button class="btn btn-ghost btn-sm" type="button" data-copy="${esc(code)}">${copyIcon()} <span>Copy</span></button>
             </div>
             <pre class="code">${highlight(code, lang)}</pre>
           </div>`;

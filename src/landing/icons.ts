@@ -59,3 +59,6 @@ export const icon = (name: IconName, { size = 16, filled = false }: { size?: num
 	filled
 		? `<svg width="${size}" height="${size}" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">${PATHS[name]}</svg>`
 		: `<svg width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${PATHS[name]}</svg>`;
+
+/** Copy glyph stacked with the check that draws in over it while the button is `.is-copied`. */
+export const copyIcon = (size = 14): string => `<span class="copy-icon">${icon('copy', { size })}${icon('check', { size })}</span>`;

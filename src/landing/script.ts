@@ -105,12 +105,16 @@ export const script = String.raw`
       var value = btn.getAttribute('data-copy');
       if (!value) return;
 
-      var label = btn.querySelector('span');
+      // .is-copied swaps the glyph for the drawn check (see .copy-icon in the stylesheet).
+      var label = btn.querySelector('.copy-icon + span');
       var done = function () {
-        if (!label) return;
-        var prev = label.textContent;
-        label.textContent = 'Copied';
-        setTimeout(function () { label.textContent = prev; }, 1400);
+        clearTimeout(btn._copied);
+        btn.classList.add('is-copied');
+        if (label) label.textContent = 'Copied';
+        btn._copied = setTimeout(function () {
+          btn.classList.remove('is-copied');
+          if (label) label.textContent = 'Copy';
+        }, 1600);
       };
 
       if (navigator.clipboard && navigator.clipboard.writeText) {
