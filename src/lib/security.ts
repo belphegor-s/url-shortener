@@ -2,6 +2,8 @@ import type { MiddlewareHandler } from 'hono';
 import type { AppEnv } from '../types';
 
 const GITHUB_AVATARS = 'https://avatars.githubusercontent.com';
+// The portfolio shows the site live in its project cards; nothing else may frame it.
+const PORTFOLIO = 'https://ayushsharma.me https://www.ayushsharma.me';
 
 // One strict policy for the whole app. Every script is a self-hosted bundle
 // (`script-src 'self'`, no nonce, no unsafe-inline); inline styles and Google Fonts
@@ -9,7 +11,7 @@ const GITHUB_AVATARS = 'https://avatars.githubusercontent.com';
 const CSP = [
 	"default-src 'self'",
 	"base-uri 'self'",
-	"frame-ancestors 'self'",
+	`frame-ancestors 'self' ${PORTFOLIO}`,
 	"form-action 'self'",
 	"object-src 'none'",
 	`img-src 'self' data: ${GITHUB_AVATARS}`,
@@ -22,7 +24,6 @@ const CSP = [
 const STATIC = {
 	'Strict-Transport-Security': 'max-age=31536000; includeSubDomains; preload',
 	'X-Content-Type-Options': 'nosniff',
-	'X-Frame-Options': 'SAMEORIGIN',
 	'Referrer-Policy': 'strict-origin-when-cross-origin',
 	'Permissions-Policy': 'accelerometer=(), camera=(), geolocation=(), gyroscope=(), magnetometer=(), microphone=(), payment=(), usb=()',
 };
